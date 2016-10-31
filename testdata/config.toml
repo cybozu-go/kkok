@@ -1,0 +1,40 @@
+initial_interval = 100
+max_interval = 1000
+
+listen = "localhost:12229"
+
+[log]
+level = "debug"
+
+[[source]]
+type = "maildir"
+dir = "/var/mail/ymmt2005"
+
+[[route.notify]]
+type = "slack"
+url = "https://hooks.slack.com/xxxx"
+
+[[route.notify]]
+type = "email"
+from = "kkok@example.com"
+to = ["ymmt2005@example.com", "ymmt@example.org"]
+
+[[route.emergency]]
+type = "twilio"
+sid = "xxxx"
+token = "yyyy"
+from = "999999999"
+tofile = "/run/kkok/twilio.txt"
+
+[[filter]]
+id = "default"
+type = "route"
+action = "add"
+routes = ["notify"]
+
+[[filter]]
+id = "emergency"
+type = "route"
+if = "alert.From == 'RAID monitor'"
+action = "add"
+routes = ["emergency"]
