@@ -169,13 +169,13 @@ func testHandle(t *testing.T) {
 	tr1 := &testTransport{}
 	k.AddRoute("r1", []Transport{tr1})
 
-	k.Handle([]*Alert{&Alert{}})
+	k.Handle([]*Alert{{}})
 	if len(tr1.alerts) != 0 {
 		t.Error(len(tr1.alerts) != 0)
 	}
 
 	f2.Enable(false)
-	k.Handle([]*Alert{&Alert{}})
+	k.Handle([]*Alert{{}})
 	if len(tr1.alerts) != 2 {
 		t.Error(len(tr1.alerts) != 2)
 	}

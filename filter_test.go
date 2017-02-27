@@ -54,7 +54,7 @@ func testBaseFilterAll(t *testing.T) {
 		t.Error("condition shoult not be met")
 	}
 
-	ok, err = b.EvalAllAlerts([]*Alert{&Alert{}, &Alert{}})
+	ok, err = b.EvalAllAlerts([]*Alert{{}, {}})
 	if err != nil {
 		t.Fatal(err)
 	}

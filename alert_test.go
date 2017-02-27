@@ -70,7 +70,7 @@ func testAlertClone(t *testing.T) {
 		Routes:  []string{"notify"},
 		Info:    map[string]interface{}{"domain": "example.org"},
 		Sub: []*Alert{
-			&Alert{From: "sub1"}, &Alert{From: "sub2"},
+			{From: "sub1"}, {From: "sub2"},
 		},
 	}
 
