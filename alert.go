@@ -41,7 +41,9 @@ type Alert struct {
 	Sub []*Alert `json:",omitempty"`
 }
 
-func (a *Alert) validate() error {
+// Validate validates constructed Alert struct.
+// For invalid structs, non-nil errors are returned.
+func (a *Alert) Validate() error {
 	if len(a.From) == 0 {
 		return errors.New("empty From")
 	}

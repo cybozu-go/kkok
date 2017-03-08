@@ -1,0 +1,10 @@
+Delivered-To: monitor@exmple.com
+From: monitor <monitor@example.com>
+To: "kkok" <kkok@example.com>
+Subject: dummy
+Date: Fri, 3 Mar 2017 14:21:57 +0000
+Content-Type: text/plain; charset="ks_c_5601-1987"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+
+SG9zdDogZXhhbXBsZS5jb20NClRpdGxlOiCivavGq7mryA0KDQpob2dlDQo=

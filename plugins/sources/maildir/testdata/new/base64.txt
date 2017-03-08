@@ -1,0 +1,10 @@
+Return-Path: <ymmt2005@example.com>
+From: monitor@example.com
+Subject: test2
+Date: Tue, 28 Feb 2017 06:10:15 -0100
+Content-Language: ja-JP
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+
+SG9zdDogdGVzdC1ob3N0DQoNCiQg4oKsIOWGhg0K

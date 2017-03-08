@@ -1,0 +1,17 @@
+Delivered-To: ymmt2005@example.com
+Received: by 10.107.166.197 with SMTP id p188csp429330ioe;
+        Mon, 27 Feb 2017 21:55:05 -0800 (PST)
+Return-Path: <ymmt2005@example.com>
+From: monitor <monitor@example.com>
+Subject: =?iso-2022-jp?B?GyRCJUYlOSVIGyhC?=
+Date: Tue, 28 Feb 2017 05:55:02 +0000
+Message-ID: <HK2PR03MB13934F967A4B0999CCD3779BA0560@HK2PR03MB1393.com>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+=1B$B%F%9%H%F%9%H=1B(B
+test
+test

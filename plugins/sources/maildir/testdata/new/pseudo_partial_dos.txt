@@ -1,0 +1,16 @@
+Return-Path: <ymmt2005@localhost>
+Received: by localhost@localdomain (Postfix, from userid 1000)
+	id 8E18634989; Tue, 28 Feb 2017 13:56:18 +0900 (JST)
+Date: Tue, 28 Feb 2017 13:56:25 +0000
+To: kkok@localhost
+Subject: Alert from example monitor
+User-Agent: s-nail v14.8.6
+Message-Id: <20170228045619.8E18634989@localhost>
+From: ymmt2005 <ymmt2005@example.com>
+
+From: example monitor
+Host: host-1
+Option1: 123
+Option2: aaa
+
+test

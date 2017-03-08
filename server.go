@@ -174,7 +174,7 @@ func (a *apiHandler) postAlert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := alert.validate()
+	err := alert.Validate()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
