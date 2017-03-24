@@ -9,7 +9,7 @@
 Architecture
 ------------
 
-kkok sends alerts with these steps:
+kkok sends alerts through these steps:
 
 1. Generate alerts from sources.
 2. Collect and pool alerts for some duration.
@@ -29,6 +29,7 @@ Features
 
 * Filters:
 
+    * `frequency`: calculate and add frequency information to alerts.
     * `discard`: discard alerts based on the given conditions.
     * `group`: merge alerts into groups by field values.
     * `route`: add or replace routes to alert receivers.

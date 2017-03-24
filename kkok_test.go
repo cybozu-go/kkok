@@ -65,16 +65,19 @@ func testFilters(t *testing.T) {
 	t.Parallel()
 
 	f1 := &dupFilter{}
-	f1.Init("f1", false, nil)
+	f1.Init("f1", nil)
 	f2 := &dupFilter{}
-	f2.Init("f2", true, nil)
+	f2.Init("f2", nil)
 
 	k := NewKkok()
 	if len(k.Filters()) != 0 {
 		t.Error(`len(k.Filters()) != 0`)
 	}
 
-	k.AddFilter(f1)
+	err := k.AddStaticFilter(f1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(k.Filters()) != 1 {
 		t.Error(`len(k.Filters()) != 1`)
 	}
@@ -83,13 +86,13 @@ func testFilters(t *testing.T) {
 		t.Error(`k.getFilter("f1") != Filter(f1)`)
 	}
 
-	// in fact, replace
-	k.AddFilter(f1)
+	// replace
+	k.PutFilter(f1)
 	if len(k.Filters()) != 1 {
 		t.Error(`len(k.Filters()) != 1`)
 	}
 
-	k.AddFilter(f2)
+	k.PutFilter(f2)
 	if len(k.Filters()) != 2 {
 		t.Error(`len(k.Filters()) != 2`)
 	}
@@ -159,12 +162,15 @@ func testHandle(t *testing.T) {
 	k := NewKkok()
 
 	f1 := &dupFilter{}
-	f1.Init("f1", false, nil)
-	k.AddFilter(f1)
+	f1.Init("f1", nil)
+	err := k.AddStaticFilter(f1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	f2 := &discardFilter{}
-	f2.Init("f2", true, nil)
-	k.AddFilter(f2)
+	f2.Init("f2", nil)
+	k.PutFilter(f2)
 
 	tr1 := &testTransport{}
 	k.AddRoute("r1", []Transport{tr1})

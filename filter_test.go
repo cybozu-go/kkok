@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-func newBaseFilter(id string, dynamic bool, params map[string]interface{}) (*BaseFilter, error) {
+func newBaseFilter(id string, params map[string]interface{}) (*BaseFilter, error) {
 	b := new(BaseFilter)
-	err := b.Init(id, dynamic, params)
+	err := b.Init(id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -18,22 +18,25 @@ func newBaseFilter(id string, dynamic bool, params map[string]interface{}) (*Bas
 func testBaseFilterAll(t *testing.T) {
 	t.Parallel()
 	params := map[string]interface{}{
+		"label":    "テスト",
 		"disabled": true,
 		"all":      true,
 		"if":       "alerts.length > 1",
 	}
 
-	b, err := newBaseFilter("base", false, params)
+	b, err := newBaseFilter("base", params)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if b.Dynamic() {
-		t.Error(`b.Dynamic()`)
-	}
-
 	if b.ID() != "base" {
 		t.Error(`b.ID() != "base"`)
+	}
+	if b.Label() != "テスト" {
+		t.Error(`b.Label() != "テスト"`)
+	}
+	if b.Dynamic() {
+		t.Error(`b.Dynamic()`)
 	}
 	if !b.Disabled() {
 		t.Error(`!b.Disabled()`)
@@ -70,13 +73,9 @@ func testBaseFilterOne(t *testing.T) {
 		"if":  "alert.From == 'hoge'",
 	}
 
-	b, err := newBaseFilter("base", true, params)
+	b, err := newBaseFilter("base", params)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	if !b.Dynamic() {
-		t.Error(`!b.Dynamic()`)
 	}
 
 	if b.Disabled() {
@@ -110,7 +109,7 @@ func testBaseFilterParseError(t *testing.T) {
 		"if":  "alert.From =",
 	}
 
-	_, err := newBaseFilter("id", true, params)
+	_, err := newBaseFilter("id", params)
 	if err == nil {
 		t.Fatal("if must cause a parse error")
 	}
@@ -129,7 +128,7 @@ func testBaseFilterCommand(t *testing.T) {
 		"if":  []interface{}{jq, "-e", `.From == "hoge"`},
 	}
 
-	b, err := newBaseFilter("base", false, params)
+	b, err := newBaseFilter("base", params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +157,7 @@ func testBaseFilterExpire(t *testing.T) {
 		"expire": "hoge",
 	}
 
-	_, err := newBaseFilter("id", true, params)
+	_, err := newBaseFilter("id", params)
 	if err == nil {
 		t.Fatal("expire must cause a parse error")
 	}
@@ -167,30 +166,32 @@ func testBaseFilterExpire(t *testing.T) {
 	now := time.Now().UTC()
 
 	params["expire"] = now.Add(-1 * time.Hour).Format(time.RFC3339)
-	f, err := newBaseFilter("id", false, params)
+	f, err := newBaseFilter("id", params)
 	if err != nil {
 		t.Fatal(err)
-	}
-	if !f.expire.IsZero() {
-		t.Error(`!f.expire.IsZero()`)
 	}
 
-	f, err = newBaseFilter("id", true, params)
-	if err != nil {
-		t.Fatal(err)
-	}
 	if f.expire.IsZero() {
 		t.Error(`f.expire.IsZero()`)
 	}
+
+	// static filters never expires.
+	if f.Expired() {
+		t.Error(`f.Expired()`)
+	}
+	// set it dynamic, then it gets expired.
+	f.SetDynamic()
 	if !f.Expired() {
 		t.Error(`!f.Expired()`)
 	}
 
 	params["expire"] = now.Add(1 * time.Hour).Format(time.RFC3339)
-	f, err = newBaseFilter("id", true, params)
+	f, err = newBaseFilter("id", params)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	f.SetDynamic()
 	if f.expire.IsZero() {
 		t.Error(`f.expire.IsZero()`)
 	}
@@ -210,10 +211,11 @@ func testBaseFilterAddParams(t *testing.T) {
 		"expire":   now.Format(time.RFC3339Nano),
 	}
 
-	f, err := newBaseFilter("id", true, params)
+	f, err := newBaseFilter("id", params)
 	if err != nil {
 		t.Fatal(err)
 	}
+	f.SetDynamic()
 
 	m := make(map[string]interface{})
 	f.AddParams(m)

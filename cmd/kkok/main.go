@@ -71,7 +71,10 @@ func main() {
 			os.Exit(1)
 		}
 		idMap[id] = struct{}{}
-		k.AddFilter(f)
+		err = k.AddStaticFilter(f)
+		if err != nil {
+			log.ErrorExit(err)
+		}
 	}
 
 	// start dispatcher

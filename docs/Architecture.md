@@ -96,6 +96,7 @@ via REST API.  All filters have the following properties:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `id` | string | The unique ID of the filter. |
+| `label` | string | Arbitrary string label. |
 | `type` | string | Filter type such as `discard`, `group`, `route`. |
 | `active` | bool | Inactive filters will not be used. |
 | `all` | bool | If `true`, the filter works for all alerts (not one-by-one). |
@@ -126,6 +127,7 @@ pooled alerts is larger than 10.
 ```
 [[filters]]
 id = "toomanyalerts"
+label = "Too many alerts"
 type = "group"
 active = true
 all = true

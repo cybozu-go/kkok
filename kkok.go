@@ -107,8 +107,27 @@ func (k *Kkok) AddRoute(id string, route []Transport) error {
 	return nil
 }
 
-// AddFilter adds or replaces a filter with filter.ID().
-func (k *Kkok) AddFilter(filter Filter) {
+// AddStaticFilter adds a filter statically.
+func (k *Kkok) AddStaticFilter(filter Filter) error {
+	k.lkf.Lock()
+	defer k.lkf.Unlock()
+
+	k.gc()
+
+	id := filter.ID()
+
+	for _, f := range k.filters {
+		if f.ID() == id {
+			return errors.New("duplicate filter id: " + id)
+		}
+	}
+
+	k.filters = append(k.filters, filter)
+	return nil
+}
+
+// PutFilter adds or replaces a filter with filter.ID().
+func (k *Kkok) PutFilter(filter Filter) {
 	k.lkf.Lock()
 	defer k.lkf.Unlock()
 
@@ -120,10 +139,14 @@ func (k *Kkok) AddFilter(filter Filter) {
 		if f.ID() != id {
 			continue
 		}
+		if f.Dynamic() {
+			filter.SetDynamic()
+		}
 		k.filters[i] = filter
 		return
 	}
 
+	filter.SetDynamic()
 	k.filters = append(k.filters, filter)
 }
 

@@ -239,11 +239,15 @@ func testServerFiltersGet(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://localhost/filters", nil)
 	k := NewKkok()
 	f1 := &dupFilter{}
-	f1.Init("f1", false, nil)
+	f1.Init("f1", nil)
+	err := k.AddStaticFilter(f1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	f2 := &dupFilter{}
-	f2.Init("f2", true, nil)
-	k.AddFilter(f1)
-	k.AddFilter(f2)
+	f2.Init("f2", nil)
+	k.PutFilter(f2)
 
 	w := recordWithKkok(k, r)
 	if w.Code != http.StatusOK {
@@ -269,13 +273,17 @@ func testServerFiltersIDGet(t *testing.T) {
 
 	k := NewKkok()
 	f1 := &dupFilter{}
-	f1.Init("f1", false, map[string]interface{}{
+	f1.Init("f1", map[string]interface{}{
 		"all": true,
 	})
+	err := k.AddStaticFilter(f1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	f2 := &dupFilter{}
-	f2.Init("f2", true, nil)
-	k.AddFilter(f1)
-	k.AddFilter(f2)
+	f2.Init("f2", nil)
+	k.PutFilter(f2)
 
 	r := httptest.NewRequest("GET", "http://localhost/filters/f1", nil)
 	w := recordWithKkok(k, r)
@@ -315,7 +323,7 @@ func testServerFiltersIDPut(t *testing.T) {
 
 	RegisterFilter("dup", func(id string, params map[string]interface{}) (Filter, error) {
 		f := &dupFilter{}
-		err := f.Init(id, true, params)
+		err := f.Init(id, params)
 		if err != nil {
 			return nil, err
 		}
@@ -370,13 +378,17 @@ func testServerFiltersIDDelete(t *testing.T) {
 
 	k := NewKkok()
 	f1 := &dupFilter{}
-	f1.Init("f1", false, map[string]interface{}{
+	f1.Init("f1", map[string]interface{}{
 		"all": true,
 	})
+	err := k.AddStaticFilter(f1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	f2 := &dupFilter{}
-	f2.Init("f2", true, nil)
-	k.AddFilter(f1)
-	k.AddFilter(f2)
+	f2.Init("f2", nil)
+	k.PutFilter(f2)
 
 	r := httptest.NewRequest("DELETE", "http://localhost/filters/nosuchfilter", nil)
 	w := recordWithKkok(k, r)

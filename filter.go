@@ -21,8 +21,8 @@ var (
 
 // Filter is the interface that filter plugins must implement.
 //
-// Dynamic, ID, Disabled, Enable, and Expired are provided by BaseFilter
-// so that filters can embed BaseFilter to implement them.
+// Methods other than Params and Process are implemented in BaseFilter
+// so that a filter implementation can embed BaseFilter to provide them.
 type Filter interface {
 
 	// Params returns PluginParams that can be used to construct
@@ -33,11 +33,18 @@ type Filter interface {
 	// the filtered alerts.
 	Process(alerts []*Alert) ([]*Alert, error)
 
-	// Dynamic returns true if the filter is dynamically registered.
-	Dynamic() bool
-
 	// ID returns the ID of the filter.
 	ID() string
+
+	// Label returns the string label of the filter.
+	Label() string
+
+	// Dynamic returns true if the filter is added dynamically.
+	Dynamic() bool
+
+	// SetDynamic sets the filter dynamic.
+	// This should be used privately inside kkok.
+	SetDynamic()
 
 	// Disabled returns true iff the filter is disabled.
 	Disabled() bool
@@ -50,6 +57,9 @@ type Filter interface {
 }
 
 // FilterConstructor is a function signature for filter construction.
+//
+// id should be passed to BaseFilter.Init.
+// params may be used to initialize the filter.
 type FilterConstructor func(id string, params map[string]interface{}) (Filter, error)
 
 var filterTypes = make(map[string]FilterConstructor)
@@ -81,8 +91,9 @@ func NewFilter(typ string, params map[string]interface{}) (Filter, error) {
 //
 // Filter plugins MUST embed BaseFilter anonymously.
 type BaseFilter struct {
-	dynamic   bool
 	id        string
+	label     string
+	dynamic   bool
 	disabled  bool
 	all       bool
 	origIf    interface{}
@@ -93,11 +104,9 @@ type BaseFilter struct {
 
 // Init initializes BaseFilter with parameters.
 //
-// Dynamic filters should specify false to dynamic.
+// Significant keys in params are:
 //
-// Significant keys are:
-//
-//    id       string  ID of the filter.  This is mandatory.
+//    label    string  Arbitrary string label of the filter.
 //    disabled bool    If true, this filter is disabled.
 //    expire   string  RFC3339 format time at which this filter expires.
 //    all      bool    If true, the filter process all alerts at once.
@@ -105,13 +114,20 @@ type BaseFilter struct {
 //                     string must be a JavaScript expression.
 //                     array of strings must be a command and arguments
 //                     to be invoked.
-func (b *BaseFilter) Init(id string, dynamic bool, params map[string]interface{}) error {
+func (b *BaseFilter) Init(id string, params map[string]interface{}) error {
 	if !reFilterID.MatchString(id) {
 		return errors.New("invalid filter id: " + id)
 	}
 
 	b.id = id
-	b.dynamic = dynamic
+
+	if i, ok := params["label"]; ok {
+		label, ok := i.(string)
+		if !ok {
+			return errors.New("label must be a string")
+		}
+		b.label = label
+	}
 
 	if i, ok := params["disabled"]; ok {
 		disabled, ok := i.(bool)
@@ -121,7 +137,7 @@ func (b *BaseFilter) Init(id string, dynamic bool, params map[string]interface{}
 		b.disabled = disabled
 	}
 
-	if i, ok := params["expire"]; ok && dynamic {
+	if i, ok := params["expire"]; ok {
 		s, ok := i.(string)
 		if !ok {
 			return errors.New("expire must be a string for RFC3339 time format")
@@ -197,19 +213,30 @@ func (b *BaseFilter) AddParams(m map[string]interface{}) {
 	if b.origIf != nil {
 		m["if"] = b.origIf
 	}
-	if !b.expire.IsZero() {
+	if b.dynamic && (!b.expire.IsZero()) {
 		m["expire"] = b.expire
 	}
-}
-
-// Dynamic returns true if the filter is dynamically registered.
-func (b *BaseFilter) Dynamic() bool {
-	return b.dynamic
 }
 
 // ID returns the ID of the filter.
 func (b *BaseFilter) ID() string {
 	return b.id
+}
+
+// Label returns the string label of the filter.
+func (b *BaseFilter) Label() string {
+	return b.label
+}
+
+// Dynamic returns true if the filter is added dynamically.
+func (b *BaseFilter) Dynamic() bool {
+	return b.dynamic
+}
+
+// SetDynamic sets the filter dynamic.
+// This should be used privately inside kkok.
+func (b *BaseFilter) SetDynamic() {
+	b.dynamic = true
 }
 
 // Disabled returns true iff the filter is disabled.
@@ -230,6 +257,10 @@ func (b *BaseFilter) All() bool {
 
 // Expired returns true iff the filter has already been expired.
 func (b *BaseFilter) Expired() bool {
+	if !b.dynamic {
+		return false
+	}
+
 	if b.expire.IsZero() {
 		return false
 	}

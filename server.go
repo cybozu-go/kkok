@@ -265,7 +265,7 @@ func (a *apiHandler) putFilter(w http.ResponseWriter, r *http.Request, id string
 		return
 	}
 
-	a.k.AddFilter(f)
+	a.k.PutFilter(f)
 }
 
 func (a *apiHandler) deleteFilter(w http.ResponseWriter, r *http.Request, id string) {
