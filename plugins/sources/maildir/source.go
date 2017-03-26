@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/kkok"
+	"github.com/cybozu-go/kkok/util"
 	"github.com/cybozu-go/log"
 	"github.com/pkg/errors"
 )
@@ -36,14 +37,9 @@ func (s *source) Run(ctx context.Context, post func(*kkok.Alert)) error {
 }
 
 func ctor(params map[string]interface{}) (kkok.Source, error) {
-	i, ok := params["dir"]
-	if !ok {
-		return nil, errors.New(`maildir: missing mandatory parmeter "dir"`)
-	}
-
-	dir, ok := i.(string)
-	if !ok {
-		return nil, errors.New(`maildir: dir must be a string`)
+	dir, err := util.GetString("dir", params)
+	if err != nil {
+		return nil, errors.Wrap(err, "maildir: dir")
 	}
 
 	if !filepath.IsAbs(dir) {
@@ -64,15 +60,12 @@ func ctor(params map[string]interface{}) (kkok.Source, error) {
 
 	interval := time.Second * defaultInterval
 
-	if i, ok = params["interval"]; ok {
-		switch ii := i.(type) {
-		case int:
-			interval = time.Duration(ii) * time.Second
-		case float64:
-			interval = time.Duration(int(ii)) * time.Second
-		default:
-			return nil, errors.New(`maildir: invalid interval type`)
-		}
+	switch i, err := util.GetInt("interval", params); {
+	case util.IsNotFound(err):
+	case err != nil:
+		return nil, errors.Wrap(err, "maildir: interval")
+	default:
+		interval = time.Duration(i) * time.Second
 	}
 
 	if interval <= 0 {
