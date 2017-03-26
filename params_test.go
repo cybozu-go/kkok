@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
+	"github.com/cybozu-go/kkok/util"
 )
 
 func testTOML(t *testing.T) {
@@ -59,29 +60,20 @@ func testJSON(t *testing.T) {
 	if pp.Type != "fuga" {
 		t.Error(`pp.Type != "fuga"`)
 	}
-	if p1, err := pp.GetAsInt("p1"); err != nil {
+	if p1, err := util.GetInt("p1", pp.Params); err != nil {
 		t.Error(err)
 	} else if p1 != 3 {
 		t.Error(`p1 != 3`)
 	}
-	if p2, err := pp.GetAsFloat("p2"); err != nil {
+	if p2, err := util.GetFloat64("p2", pp.Params); err != nil {
 		t.Error(err)
 	} else if p2 < 1.2 || p2 > 1.3 {
 		t.Error(`p2 < 1.2 || p2 > 1.3`)
 	}
-	if p3, err := pp.GetAsBool("p3"); err != nil {
+	if p3, err := util.GetBool("p3", pp.Params); err != nil {
 		t.Error(err)
 	} else if !p3 {
 		t.Error(`!p3`)
-	}
-
-	_, err = pp.GetAsString("p1")
-	if err == nil {
-		t.Error("p1 is not a string")
-	}
-	_, err = pp.GetAsInt("none")
-	if err == nil {
-		t.Error("no such key")
 	}
 }
 
