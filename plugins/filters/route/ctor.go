@@ -52,7 +52,10 @@ func ctor(id string, params map[string]interface{}) (kkok.Filter, error) {
 		muteDuration: time.Duration(muteSeconds) * time.Second,
 		muteRoutes:   muteRoutes,
 	}
-	f.Init(id, params)
+	err = f.Init(id, params)
+	if err != nil {
+		return nil, err
+	}
 	return f, nil
 }
 
