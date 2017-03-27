@@ -30,6 +30,10 @@ An alert is represented as an object with these fields:
 | `Info` | No | object | Additional fields. |
 | `Sub` | Yes | array of objects | A list of sub-alerts for grouped alert. |
 
+Additionally, an alert has `Stats` that is a `map[string]float64`
+to bring dynamically calculated values between filters.  `Stats`
+is not exported to nor imported from JSON.
+
 An alert can be represented as a simple JSON object like this:
 
 ```javascript

@@ -35,7 +35,11 @@ type Alert struct {
 	Routes []string
 
 	// Info is a map of additional alert properties.
-	Info map[string]interface{}
+	Info map[string]interface{} `json:",omitempty"`
+
+	// Stats is a map of dynamically calculated values by filters.
+	// This field is ignored for JSON.
+	Stats map[string]float64 `json:"-"`
 
 	// Sub may list alerts grouped into this.
 	Sub []*Alert `json:",omitempty"`
@@ -67,7 +71,25 @@ func (a *Alert) Validate() error {
 	return nil
 }
 
+// SetInfo sets a value in Info with key.
+func (a *Alert) SetInfo(key string, value interface{}) {
+	if a.Info == nil {
+		a.Info = make(map[string]interface{})
+	}
+	a.Info[key] = value
+}
+
+// SetStat sets a statistics value with key.
+func (a *Alert) SetStat(key string, value float64) {
+	if a.Stats == nil {
+		a.Stats = make(map[string]float64)
+	}
+	a.Stats[key] = value
+}
+
 // Clone returns a deeply-copied clone of a.
+//
+// Stats field is not copied.
 func (a *Alert) Clone() *Alert {
 	var croutes []string
 	if len(a.Routes) > 0 {

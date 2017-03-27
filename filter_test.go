@@ -54,7 +54,7 @@ func testBaseFilterAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	if ok {
-		t.Error("condition shoult not be met")
+		t.Error("condition should not be met")
 	}
 
 	ok, err = b.EvalAllAlerts([]*Alert{{}, {}})
@@ -62,7 +62,7 @@ func testBaseFilterAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !ok {
-		t.Error("condition shoult be met")
+		t.Error("condition should be met")
 	}
 }
 
@@ -90,7 +90,7 @@ func testBaseFilterOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	if ok {
-		t.Error("condition shoult not be met")
+		t.Error("condition should not be met")
 	}
 
 	ok, err = b.EvalAlert(&Alert{From: "hoge"})
@@ -98,7 +98,39 @@ func testBaseFilterOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !ok {
-		t.Error("condition shoult be met")
+		t.Error("condition should be met")
+	}
+
+	params = map[string]interface{}{
+		"all": false,
+		"if":  "alert.Info.Hoge == 'fuga'",
+	}
+	b2, err := newBaseFilter("base", params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ok, err = b2.EvalAlert(&Alert{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Error("condition should not be met")
+	}
+
+	params = map[string]interface{}{
+		"all": false,
+		"if":  "!alert.Info.Hoge",
+	}
+	b3, err := newBaseFilter("base", params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ok, err = b3.EvalAlert(&Alert{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Error("condition should be met")
 	}
 }
 
@@ -138,7 +170,7 @@ func testBaseFilterCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	if ok {
-		t.Error("condition shoult not be met")
+		t.Error("condition should not be met")
 	}
 
 	ok, err = b.EvalAlert(&Alert{From: "hoge"})
@@ -146,7 +178,7 @@ func testBaseFilterCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !ok {
-		t.Error("condition shoult be met")
+		t.Error("condition should be met")
 	}
 }
 

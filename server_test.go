@@ -178,7 +178,8 @@ func testServerAlertsPost(t *testing.T) {
     "From": "hoge",
     "Host": "localhost",
     "Title": "aaa",
-    "Info": {"option1": true, "option2": 1}
+    "Info": {"option1": true, "option2": 1},
+    "Stats": {"stat1": 1.23}
 }`
 	r := jsonRequest("POST", "/alerts", j)
 	d := NewDispatcher(0, 0, new(testAlertHandler))
@@ -211,6 +212,32 @@ func testServerAlertsPost(t *testing.T) {
 		t.Error(`opt2, ok := a.Info["option2"]; !ok`)
 	} else if int(opt2.(float64)) != 1 {
 		t.Error(`int(opt2.(float64)) != 1`)
+	}
+	if a.Stats != nil {
+		t.Error(`a.Stats != nil`)
+	}
+
+	j2 := `{
+    "From": "fuga",
+    "Host": "localhost",
+    "Title": "aaa"
+}`
+	r = jsonRequest("POST", "/alerts", j2)
+	w = recordWithDispatcher(d, r)
+	if w.Code != http.StatusOK {
+		t.Fatal(`w.Code != http.StatusOK`)
+	}
+
+	alerts = d.take()
+	if len(alerts) != 1 {
+		t.Fatal(`len(alerts) != 1`)
+	}
+	a = alerts[0]
+	if a.From != "fuga" {
+		t.Error(`a.From != "fuga"`)
+	}
+	if a.Info != nil {
+		t.Error(`a.Info != nil`)
 	}
 }
 

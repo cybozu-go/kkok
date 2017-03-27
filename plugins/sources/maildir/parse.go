@@ -195,7 +195,7 @@ func parseBody(data []byte, a *kkok.Alert) {
 		case "Title":
 			a.Title = v
 		default:
-			a.Info[k] = v
+			a.SetInfo(k, v)
 		}
 	}
 	a.Message = string(buf)
@@ -227,7 +227,6 @@ func parse(r io.Reader) (*kkok.Alert, error) {
 		From:  getName(m.Header.Get("From")),
 		Date:  dt,
 		Title: title,
-		Info:  make(map[string]interface{}),
 	}
 
 	body, err := decodeBody(m)
