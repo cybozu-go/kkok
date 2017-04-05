@@ -33,7 +33,7 @@ func (f *filter) Params() kkok.PluginParams {
 	f.BaseFilter.AddParams(m)
 
 	return kkok.PluginParams{
-		Type:   "route",
+		Type:   filterType,
 		Params: m,
 	}
 }

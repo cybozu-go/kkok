@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	filterType         = "route"
 	defaultMuteSeconds = 60
 )
 
@@ -60,5 +61,5 @@ func ctor(id string, params map[string]interface{}) (kkok.Filter, error) {
 }
 
 func init() {
-	kkok.RegisterFilter("route", ctor)
+	kkok.RegisterFilter(filterType, ctor)
 }

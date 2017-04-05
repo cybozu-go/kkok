@@ -180,8 +180,8 @@ func testParams(t *testing.T) {
 	}
 	pp := f1.Params()
 
-	if pp.Type != "route" {
-		t.Error(`pp.Type != "route"`)
+	if pp.Type != filterType {
+		t.Error(`pp.Type != filterType`)
 	}
 
 	params := map[string]interface{}{
