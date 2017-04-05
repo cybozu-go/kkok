@@ -24,12 +24,11 @@ Features
 * Generators:
 
     * HTTP REST API.
-    * [Maildir][] scanner.
-    * [journald][] scanner.
+    * `maildir`: generate alerts from mails in a [Maildir][] directory.
 
 * Filters:
 
-    * `frequency`: calculate and add frequency information to alerts.
+    * `freq`: calculate and add frequency information to alerts.
     * `discard`: discard alerts based on the given conditions.
     * `group`: merge alerts into groups by field values.
     * `route`: add or replace routes to alert receivers.
@@ -72,7 +71,6 @@ Authors & Contributors
 [releases]: https://github.com/cybozu-go/kkok/releases
 [godoc]: https://godoc.org/github.com/cybozu-go/kkok
 [Maildir]: https://en.wikipedia.org/wiki/Maildir
-[journald]: http://0pointer.de/blog/projects/journalctl.html
 [Twilio]: https://www.twilio.com/
 [Slack]: https://slack.com/
 [MIT]: https://opensource.org/licenses/MIT
