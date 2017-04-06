@@ -12,10 +12,6 @@ import (
 )
 
 var (
-	// baseOtto is the source for all other Otto runtime.
-	// baseOtto.Copy() will create a copy/clone of the runtime.
-	baseOtto = otto.New()
-
 	reFilterID = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 )
 
@@ -164,7 +160,7 @@ func (b *BaseFilter) Init(id string, params map[string]interface{}) error {
 
 	switch i := b.origIf.(type) {
 	case string:
-		script, err := baseOtto.Compile("", i)
+		script, err := CompileJS(i)
 		if err != nil {
 			return errors.Wrap(err, "expr: "+i)
 		}
@@ -271,12 +267,7 @@ func (b *BaseFilter) Expired() bool {
 // EvalAlert evaluates an alert with "if" condition.
 func (b *BaseFilter) EvalAlert(a *Alert) (bool, error) {
 	if b.ifScript != nil {
-		vm := baseOtto.Copy()
-		err := vm.Set("alert", a)
-		if err != nil {
-			return false, err
-		}
-		value, err := vm.Run(b.ifScript)
+		value, err := a.Eval(b.ifScript)
 		if err != nil {
 			return false, err
 		}

@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/robertkrimen/otto"
 )
 
 const (
 	maxFromLength  = 100
 	maxTitleLength = 250
+)
+
+var (
+	undefined = otto.UndefinedValue()
 )
 
 // Alert represents an alert.
@@ -128,4 +134,15 @@ func (a *Alert) Clone() *Alert {
 // String returns a string representation of the alert.
 func (a *Alert) String() string {
 	return fmt.Sprintf("[%s@%s] %s", a.From, a.Host, a.Title)
+}
+
+// Eval evaluates a JavaScript script.
+// Alert itself is set to "alert" variable in the expression.
+func (a *Alert) Eval(scr *otto.Script) (otto.Value, error) {
+	vm := baseOtto.Copy()
+	err := vm.Set("alert", a)
+	if err != nil {
+		return undefined, err
+	}
+	return vm.Run(scr)
 }
