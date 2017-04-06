@@ -30,27 +30,41 @@ func testSampleGC(t *testing.T) {
 	}
 
 	// non-stale only
-	fresh := now.Add(-5 * time.Millisecond)
-	s.Add(fresh)
-	s.gc(now)
-	if len(s.samples) != 1 {
-		t.Error(`len(s.samples) != 1`)
-	}
-
-	// stale and non-stale
-	s = NewSample(10 * time.Millisecond)
-	s.Add(stale)
-	s.Add(fresh)
-	s.Add(fresh)
+	fresh1 := now.Add(-5 * time.Millisecond)
+	fresh2 := now.Add(-4 * time.Millisecond)
+	s.Add(fresh1)
+	s.Add(fresh2)
 	s.gc(now)
 	if len(s.samples) != 2 {
 		t.Error(`len(s.samples) != 2`)
 	}
 
-	for _, tt := range s.samples {
-		if !tt.Equal(fresh) {
-			t.Error(`!tt.Equal(fresh)`)
-		}
+	// stale and non-stale
+	s = NewSample(10 * time.Millisecond)
+	s.Add(stale)
+	s.Add(fresh1)
+	s.Add(fresh2)
+	s.gc(now)
+	if len(s.samples) != 2 {
+		t.Fatal(`len(s.samples) != 2`)
+	}
+	if !s.samples[0].Equal(fresh1) {
+		t.Error(`!s.samples[0].Equal(fresh1)`)
+	}
+	if !s.samples[1].Equal(fresh2) {
+		t.Error(`!s.samples[1].Equal(fresh2)`)
+	}
+
+	s = NewSample(10 * time.Millisecond)
+	s.Add(stale)
+	s.Add(stale)
+	s.Add(fresh1)
+	s.gc(now)
+	if len(s.samples) != 1 {
+		t.Fatal(`len(s.samples) != 1`)
+	}
+	if !s.samples[0].Equal(fresh1) {
+		t.Error(`!s.samples[0].Equal(fresh1)`)
 	}
 }
 

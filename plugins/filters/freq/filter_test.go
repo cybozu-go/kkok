@@ -21,8 +21,8 @@ func testCalc(t *testing.T) {
 	if !ok {
 		t.Fatal("no stats")
 	}
-	if freq != float64(1)/10 {
-		t.Error(`freq != float64(1)/10`)
+	if freq != float64(1)/defaultDivisor {
+		t.Error(`freq != float64(1)/defaultDivisor`)
 	}
 
 	f1.calc(a, time.Now())
@@ -30,8 +30,8 @@ func testCalc(t *testing.T) {
 	if !ok {
 		t.Fatal("no stats")
 	}
-	if freq != float64(2)/10 {
-		t.Error(`freq != float64(2)/10`)
+	if freq != float64(2)/defaultDivisor {
+		t.Error(`freq != float64(2)/defaultDivisor`)
 	}
 
 	time.Sleep(20 * time.Millisecond)
@@ -41,9 +41,125 @@ func testCalc(t *testing.T) {
 	if !ok {
 		t.Fatal("no stats")
 	}
-	if freq != float64(1)/10 {
-		t.Error(`freq != float64(1)/10`)
+	if freq != float64(1)/defaultDivisor {
+		t.Error(`freq != float64(1)/defaultDivisor`)
 	}
+
+	f1.divisor = 0.5
+	f1.calc(a, time.Now())
+	freq, ok = a.Stats["f1"]
+	if !ok {
+		t.Fatal("no stats")
+	}
+	if freq != float64(2)/0.5 {
+		t.Error(`freq != float64(2)/0.5`)
+	}
+
+	a = &kkok.Alert{}
+	f1.key = "key1"
+	f1.calc(a, time.Now())
+	if _, ok := a.Stats["key1"]; !ok {
+		t.Error(`_, ok := a.Stats["key1"]; !ok`)
+	}
+}
+
+func testClassifyFrom(t *testing.T) {
+	t.Parallel()
+
+	f1 := newFilter()
+	f1.Init("f1", nil)
+	f1.cl = clFrom
+	f1.divisor = 1
+	a1 := &kkok.Alert{From: "from1", Title: "title1", Host: "host1"}
+	a2 := &kkok.Alert{From: "from2", Title: "title2", Host: "host2"}
+	a3 := &kkok.Alert{From: "from1", Title: "title2", Host: "host2"}
+	a4 := &kkok.Alert{From: "from3", Title: "title2", Host: "host2"}
+
+	f1.calc(a1, time.Now())
+	f1.calc(a2, time.Now())
+	f1.calc(a3, time.Now())
+	f1.calc(a4, time.Now())
+
+	if a1.Stats["f1"] != float64(1) {
+		t.Error(`a1.Stats["f1"] != float64(1)`)
+	}
+	if a2.Stats["f1"] != float64(1) {
+		t.Error(`a2.Stats["f1"] != float64(1)`)
+	}
+	if a3.Stats["f1"] != float64(2) {
+		t.Error(`a3.Stats["f1"] != float64(2)`)
+	}
+	if a4.Stats["f1"] != float64(1) {
+		t.Error(`a4.Stats["f1"] != float64(1)`)
+	}
+}
+
+func testClassifyTitle(t *testing.T) {
+	t.Parallel()
+
+	f1 := newFilter()
+	f1.Init("f1", nil)
+	f1.cl = clTitle
+	f1.divisor = 1
+	a1 := &kkok.Alert{From: "from1", Title: "title1", Host: "host1"}
+	a2 := &kkok.Alert{From: "from2", Title: "title2", Host: "host2"}
+	a3 := &kkok.Alert{From: "from1", Title: "title3", Host: "host2"}
+	a4 := &kkok.Alert{From: "from3", Title: "title1", Host: "host2"}
+
+	f1.calc(a1, time.Now())
+	f1.calc(a2, time.Now())
+	f1.calc(a3, time.Now())
+	f1.calc(a4, time.Now())
+
+	if a1.Stats["f1"] != float64(1) {
+		t.Error(`a1.Stats["f1"] != float64(1)`)
+	}
+	if a2.Stats["f1"] != float64(1) {
+		t.Error(`a2.Stats["f1"] != float64(1)`)
+	}
+	if a3.Stats["f1"] != float64(1) {
+		t.Error(`a3.Stats["f1"] != float64(1)`)
+	}
+	if a4.Stats["f1"] != float64(2) {
+		t.Error(`a4.Stats["f1"] != float64(2)`)
+	}
+}
+
+func testClassifyHost(t *testing.T) {
+	t.Parallel()
+
+	f1 := newFilter()
+	f1.Init("f1", nil)
+	f1.cl = clHost
+	f1.divisor = 1
+	a1 := &kkok.Alert{From: "from1", Title: "title1", Host: "host1"}
+	a2 := &kkok.Alert{From: "from2", Title: "title2", Host: "host2"}
+	a3 := &kkok.Alert{From: "from1", Title: "title3", Host: "host2"}
+	a4 := &kkok.Alert{From: "from3", Title: "title2", Host: "host2"}
+
+	f1.calc(a1, time.Now())
+	f1.calc(a2, time.Now())
+	f1.calc(a3, time.Now())
+	f1.calc(a4, time.Now())
+
+	if a1.Stats["f1"] != float64(1) {
+		t.Error(`a1.Stats["f1"] != float64(1)`)
+	}
+	if a2.Stats["f1"] != float64(1) {
+		t.Error(`a2.Stats["f1"] != float64(1)`)
+	}
+	if a3.Stats["f1"] != float64(2) {
+		t.Error(`a3.Stats["f1"] != float64(2)`)
+	}
+	if a4.Stats["f1"] != float64(3) {
+		t.Error(`a4.Stats["f1"] != float64(3)`)
+	}
+}
+
+func testClassify(t *testing.T) {
+	t.Run("From", testClassifyFrom)
+	t.Run("Title", testClassifyTitle)
+	t.Run("Host", testClassifyHost)
 }
 
 func testProcess(t *testing.T) {
@@ -162,6 +278,7 @@ func testParams(t *testing.T) {
 
 func TestFilter(t *testing.T) {
 	t.Run("Calc", testCalc)
+	t.Run("Classify", testClassify)
 	t.Run("Process", testProcess)
 	t.Run("Params", testParams)
 }
