@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/cybozu-go/kkok"
+	"github.com/pkg/errors"
+	"github.com/robertkrimen/otto"
 )
 
 const (
@@ -17,21 +19,21 @@ type filter struct {
 	kkok.BaseFilter
 
 	// constants
-	duration time.Duration
-	divisor  float64
-	cl       clType
-	key      string
+	duration    time.Duration
+	divisor     float64
+	foreach     *otto.Script
+	origForeach string
+	key         string
 
 	// states
-	samples map[string]*Sample
+	samples map[interface{}]*Sample
 }
 
 func newFilter() *filter {
 	return &filter{
 		duration: defaultDuration,
 		divisor:  defaultDivisor,
-		cl:       clNone,
-		samples:  make(map[string]*Sample),
+		samples:  make(map[interface{}]*Sample),
 	}
 }
 
@@ -40,9 +42,8 @@ func (f *filter) Params() kkok.PluginParams {
 		"duration": int(math.Trunc(f.duration.Seconds())),
 		"divisor":  f.divisor,
 	}
-	cls := f.cl.String()
-	if len(cls) > 0 {
-		m["classify"] = cls
+	if len(f.origForeach) > 0 {
+		m["foreach"] = f.origForeach
 	}
 	if len(f.key) > 0 {
 		m["key"] = f.key
@@ -56,8 +57,19 @@ func (f *filter) Params() kkok.PluginParams {
 	}
 }
 
-func (f *filter) calc(a *kkok.Alert, now time.Time) {
-	v := f.cl.Value(a)
+func (f *filter) calc(a *kkok.Alert, now time.Time) error {
+	var v interface{}
+	if f.foreach != nil {
+		vv, err := a.Eval(f.foreach)
+		if err != nil {
+			return err
+		}
+		v, err = vv.Export()
+		if err != nil {
+			return err
+		}
+	}
+
 	s, ok := f.samples[v]
 	if !ok {
 		s = NewSample(f.duration)
@@ -72,6 +84,7 @@ func (f *filter) calc(a *kkok.Alert, now time.Time) {
 		k = f.ID()
 	}
 	a.SetStat(k, freq)
+	return nil
 }
 
 func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
@@ -80,12 +93,15 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	if f.BaseFilter.All() {
 		ok, err := f.BaseFilter.EvalAllAlerts(alerts)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "freq:"+f.ID())
 		}
 
 		if ok {
 			for _, a := range alerts {
-				f.calc(a, now)
+				err = f.calc(a, now)
+				if err != nil {
+					return nil, errors.Wrap(err, "freq:"+f.ID())
+				}
 			}
 		}
 		return alerts, nil
@@ -94,11 +110,14 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	for _, a := range alerts {
 		ok, err := f.BaseFilter.EvalAlert(a)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "freq:"+f.ID())
 		}
 
 		if ok {
-			f.calc(a, now)
+			err = f.calc(a, now)
+			if err != nil {
+				return nil, errors.Wrap(err, "freq:"+f.ID())
+			}
 		}
 	}
 	return alerts, nil

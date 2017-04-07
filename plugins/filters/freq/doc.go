@@ -1,10 +1,6 @@
 /*
 Package freq provides a filter to calculate frequency of the given alerts.
 
-The filter first classifies alerts into groups by fields.  For example,
-the filter can classify alerts by Host field values and calculate
-frequencies for each host.
-
 Frequency is calculated as the number of alerts received for a given
 period.  For instance, if the period is set to 60 seconds and there were
 two of such alerts in the last 60 second, then the next alert's frequency
@@ -17,13 +13,18 @@ The calculated frequency value is stored into Stats field which is
 a map[string]float64.  The map key is configurable but the default
 is the filter ID.
 
+This filter can classify alerts and calculate frequencies for
+each class.  To do so, the filter has an optional construction parameter
+"foreach".  The value of "foreach" is a JavaScript expression whose
+evaluated value will be used to classify alerts.
+
 In addition to the standard filter construction parameters, this
 plugin takes these parameters:
 
     Name            Type           Default       Description
     duration        int            600           Seconds for collection.
     divisor         float64        10.0          Constant divisor.
-    classify        string         nil           "From", "Title", or "Host".
+    foreach         string         ""            JavaScript expression.
     key             string         nil           Key of Stats.
 
 Example snippet for TOML configuration:
@@ -32,7 +33,7 @@ Example snippet for TOML configuration:
     type        = "freq"
     id          = "failed_process"
     if          = "alert.From == 'process monitor'"
-    classify    = "Host"
+    foreach     = "alert.Host"
 
 This filter calculates the frequencies of alerts from "process monitor"
 for each Host as the average number of alerts per minute

@@ -28,43 +28,18 @@ var ctorTestData = map[string]ctorTest{
 	}},
 	"f6": {map[string]interface{}{"divisor": 0}, nil},
 	"f7": {map[string]interface{}{"divisor": "5"}, nil},
-	"f8": {map[string]interface{}{"classify": "From"}, &filter{
-		duration: defaultDuration,
-		divisor:  defaultDivisor,
-		cl:       clFrom,
+	"f8": {map[string]interface{}{"foreach": "alert.From"}, &filter{
+		duration:    defaultDuration,
+		divisor:     defaultDivisor,
+		origForeach: "alert.From",
 	}},
-	"f9": {map[string]interface{}{"classify": "from"}, &filter{
-		duration: defaultDuration,
-		divisor:  defaultDivisor,
-		cl:       clFrom,
-	}},
-	"f10": {map[string]interface{}{"classify": "Title"}, &filter{
-		duration: defaultDuration,
-		divisor:  defaultDivisor,
-		cl:       clTitle,
-	}},
-	"f11": {map[string]interface{}{"classify": "title"}, &filter{
-		duration: defaultDuration,
-		divisor:  defaultDivisor,
-		cl:       clTitle,
-	}},
-	"f12": {map[string]interface{}{"classify": "Host"}, &filter{
-		duration: defaultDuration,
-		divisor:  defaultDivisor,
-		cl:       clHost,
-	}},
-	"f13": {map[string]interface{}{"classify": "host"}, &filter{
-		duration: defaultDuration,
-		divisor:  defaultDivisor,
-		cl:       clHost,
-	}},
-	"f14": {map[string]interface{}{"classify": "foo"}, nil},
-	"f15": {map[string]interface{}{"key": "test"}, &filter{
+	"f9": {map[string]interface{}{"foreach": "}"}, nil},
+	"f10": {map[string]interface{}{"key": "test"}, &filter{
 		duration: defaultDuration,
 		divisor:  defaultDivisor,
 		key:      "test",
 	}},
-	"f16": {map[string]interface{}{"key": true}, nil},
+	"f11": {map[string]interface{}{"key": true}, nil},
 }
 
 func testCtorOne(t *testing.T, id string, data ctorTest) {
@@ -84,6 +59,7 @@ func testCtorOne(t *testing.T, id string, data ctorTest) {
 		t.Fatal("not a proper filter")
 	}
 	ff.samples = nil
+	ff.foreach = nil
 	if !reflect.DeepEqual(ff, data.filter) {
 		t.Error(`!reflect.DeepEqual(ff, data.filter)`, ff, data.filter)
 	}

@@ -36,14 +36,18 @@ func ctor(id string, params map[string]interface{}) (kkok.Filter, error) {
 		return nil, errors.Wrap(err, "freq: divisor")
 	}
 
-	cls, err := util.GetString("classify", params)
+	s, err := util.GetString("foreach", params)
 	switch {
 	case err == nil:
-		cl, err := str2cl(cls)
-		if err != nil {
-			return nil, errors.Wrap(err, "freq: classify")
+		if len(s) == 0 {
+			break
 		}
-		f.cl = cl
+		foreach, err := kkok.CompileJS(s)
+		if err != nil {
+			return nil, errors.Wrap(err, "freq: foreach")
+		}
+		f.foreach = foreach
+		f.origForeach = s
 	case util.IsNotFound(err):
 	default:
 		return nil, errors.Wrap(err, "freq: classify")

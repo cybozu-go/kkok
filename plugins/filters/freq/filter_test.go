@@ -16,7 +16,10 @@ func testCalc(t *testing.T) {
 	f1.duration = 10 * time.Millisecond
 	a := &kkok.Alert{}
 
-	f1.calc(a, time.Now())
+	err := f1.calc(a, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	freq, ok := a.Stats["f1"]
 	if !ok {
 		t.Fatal("no stats")
@@ -25,7 +28,10 @@ func testCalc(t *testing.T) {
 		t.Error(`freq != float64(1)/defaultDivisor`)
 	}
 
-	f1.calc(a, time.Now())
+	err = f1.calc(a, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	freq, ok = a.Stats["f1"]
 	if !ok {
 		t.Fatal("no stats")
@@ -36,7 +42,10 @@ func testCalc(t *testing.T) {
 
 	time.Sleep(20 * time.Millisecond)
 
-	f1.calc(a, time.Now())
+	err = f1.calc(a, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	freq, ok = a.Stats["f1"]
 	if !ok {
 		t.Fatal("no stats")
@@ -46,7 +55,10 @@ func testCalc(t *testing.T) {
 	}
 
 	f1.divisor = 0.5
-	f1.calc(a, time.Now())
+	err = f1.calc(a, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	freq, ok = a.Stats["f1"]
 	if !ok {
 		t.Fatal("no stats")
@@ -57,109 +69,89 @@ func testCalc(t *testing.T) {
 
 	a = &kkok.Alert{}
 	f1.key = "key1"
-	f1.calc(a, time.Now())
+	err = f1.calc(a, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, ok := a.Stats["key1"]; !ok {
 		t.Error(`_, ok := a.Stats["key1"]; !ok`)
 	}
 }
 
-func testClassifyFrom(t *testing.T) {
+func testForeachTitle(t *testing.T) {
 	t.Parallel()
+
+	s, err := kkok.CompileJS(`alert.From`)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	f1 := newFilter()
 	f1.Init("f1", nil)
-	f1.cl = clFrom
+	f1.foreach = s
 	f1.divisor = 1
-	a1 := &kkok.Alert{From: "from1", Title: "title1", Host: "host1"}
-	a2 := &kkok.Alert{From: "from2", Title: "title2", Host: "host2"}
-	a3 := &kkok.Alert{From: "from1", Title: "title2", Host: "host2"}
-	a4 := &kkok.Alert{From: "from3", Title: "title2", Host: "host2"}
+	alerts := []*kkok.Alert{
+		{From: "from1", Title: "title1", Host: "host1"},
+		{From: "from2", Title: "title2", Host: "host1"},
+		{From: "from1", Title: "title2", Host: "host2"},
+		{From: "from3", Title: "title2", Host: "host2"},
+	}
 
-	f1.calc(a1, time.Now())
-	f1.calc(a2, time.Now())
-	f1.calc(a3, time.Now())
-	f1.calc(a4, time.Now())
-
-	if a1.Stats["f1"] != float64(1) {
-		t.Error(`a1.Stats["f1"] != float64(1)`)
-	}
-	if a2.Stats["f1"] != float64(1) {
-		t.Error(`a2.Stats["f1"] != float64(1)`)
-	}
-	if a3.Stats["f1"] != float64(2) {
-		t.Error(`a3.Stats["f1"] != float64(2)`)
-	}
-	if a4.Stats["f1"] != float64(1) {
-		t.Error(`a4.Stats["f1"] != float64(1)`)
+	results := []float64{1, 1, 2, 1}
+	for i, a := range alerts {
+		err = f1.calc(a, time.Now())
+		if err != nil {
+			t.Fatal(err, "i=", i)
+		}
+		if a.Stats["f1"] != results[i] {
+			t.Error(`a.Stats["f1"] != results[i]; i=`, i)
+		}
 	}
 }
 
-func testClassifyTitle(t *testing.T) {
+func testForeachInfo(t *testing.T) {
 	t.Parallel()
+
+	s, err := kkok.CompileJS(`alert.Info.foo`)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	f1 := newFilter()
 	f1.Init("f1", nil)
-	f1.cl = clTitle
+	f1.foreach = s
 	f1.divisor = 1
-	a1 := &kkok.Alert{From: "from1", Title: "title1", Host: "host1"}
-	a2 := &kkok.Alert{From: "from2", Title: "title2", Host: "host2"}
-	a3 := &kkok.Alert{From: "from1", Title: "title3", Host: "host2"}
-	a4 := &kkok.Alert{From: "from3", Title: "title1", Host: "host2"}
+	alerts := []*kkok.Alert{
+		{From: "from1", Info: map[string]interface{}{
+			"foo": "bar",
+		}},
+		{From: "from2", Info: map[string]interface{}{
+			"foo": "zot",
+		}},
+		{From: "from1", Info: map[string]interface{}{
+			"foo": "bar",
+		}},
+		{From: "from1"},
+		{From: "from1", Info: map[string]interface{}{
+			"foo": "zot",
+		}},
+	}
 
-	f1.calc(a1, time.Now())
-	f1.calc(a2, time.Now())
-	f1.calc(a3, time.Now())
-	f1.calc(a4, time.Now())
-
-	if a1.Stats["f1"] != float64(1) {
-		t.Error(`a1.Stats["f1"] != float64(1)`)
-	}
-	if a2.Stats["f1"] != float64(1) {
-		t.Error(`a2.Stats["f1"] != float64(1)`)
-	}
-	if a3.Stats["f1"] != float64(1) {
-		t.Error(`a3.Stats["f1"] != float64(1)`)
-	}
-	if a4.Stats["f1"] != float64(2) {
-		t.Error(`a4.Stats["f1"] != float64(2)`)
+	results := []float64{1, 1, 2, 1, 2}
+	for i, a := range alerts {
+		err = f1.calc(a, time.Now())
+		if err != nil {
+			t.Fatal(err, "i=", i)
+		}
+		if a.Stats["f1"] != results[i] {
+			t.Error(`a.Stats["f1"] != results[i]; i=`, i)
+		}
 	}
 }
 
-func testClassifyHost(t *testing.T) {
-	t.Parallel()
-
-	f1 := newFilter()
-	f1.Init("f1", nil)
-	f1.cl = clHost
-	f1.divisor = 1
-	a1 := &kkok.Alert{From: "from1", Title: "title1", Host: "host1"}
-	a2 := &kkok.Alert{From: "from2", Title: "title2", Host: "host2"}
-	a3 := &kkok.Alert{From: "from1", Title: "title3", Host: "host2"}
-	a4 := &kkok.Alert{From: "from3", Title: "title2", Host: "host2"}
-
-	f1.calc(a1, time.Now())
-	f1.calc(a2, time.Now())
-	f1.calc(a3, time.Now())
-	f1.calc(a4, time.Now())
-
-	if a1.Stats["f1"] != float64(1) {
-		t.Error(`a1.Stats["f1"] != float64(1)`)
-	}
-	if a2.Stats["f1"] != float64(1) {
-		t.Error(`a2.Stats["f1"] != float64(1)`)
-	}
-	if a3.Stats["f1"] != float64(2) {
-		t.Error(`a3.Stats["f1"] != float64(2)`)
-	}
-	if a4.Stats["f1"] != float64(3) {
-		t.Error(`a4.Stats["f1"] != float64(3)`)
-	}
-}
-
-func testClassify(t *testing.T) {
-	t.Run("From", testClassifyFrom)
-	t.Run("Title", testClassifyTitle)
-	t.Run("Host", testClassifyHost)
+func testForeach(t *testing.T) {
+	t.Run("Title", testForeachTitle)
+	t.Run("Info", testForeachInfo)
 }
 
 func testProcess(t *testing.T) {
@@ -235,8 +227,8 @@ func testParamsDefault(t *testing.T) {
 	if pp.Params["divisor"].(float64) != defaultDivisor {
 		t.Error(`pp.Params["divisor"].(float64) != defaultDivisor`)
 	}
-	if _, ok := pp.Params["classify"]; ok {
-		t.Error(`_, ok :- pp.Params["classify"]; ok`)
+	if _, ok := pp.Params["foreach"]; ok {
+		t.Error(`_, ok :- pp.Params["foreach"]; ok`)
 	}
 	if _, ok := pp.Params["key"]; ok {
 		t.Error(`_, ok :- pp.Params["key"]; ok`)
@@ -249,7 +241,7 @@ func testParamsExplicit(t *testing.T) {
 	f1 := newFilter()
 	f1.duration = 2 * time.Second
 	f1.divisor = 1.0
-	f1.cl = clTitle
+	f1.origForeach = "alert.Title"
 	f1.key = "hoge"
 
 	pp := f1.Params()
@@ -261,7 +253,7 @@ func testParamsExplicit(t *testing.T) {
 	params := map[string]interface{}{
 		"duration": 2,
 		"divisor":  1.0,
-		"classify": "Title",
+		"foreach":  "alert.Title",
 		"key":      "hoge",
 	}
 	if !reflect.DeepEqual(pp.Params, params) {
@@ -278,7 +270,7 @@ func testParams(t *testing.T) {
 
 func TestFilter(t *testing.T) {
 	t.Run("Calc", testCalc)
-	t.Run("Classify", testClassify)
+	t.Run("Foreach", testForeach)
 	t.Run("Process", testProcess)
 	t.Run("Params", testParams)
 }
