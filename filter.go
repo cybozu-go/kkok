@@ -200,6 +200,9 @@ func parseCommand(a []interface{}) (*exec.Cmd, error) {
 // AddParams adds basic parameters for Filter.Params method.
 // The map must not be nil.
 func (b *BaseFilter) AddParams(m map[string]interface{}) {
+	if len(b.label) > 0 {
+		m["label"] = b.label
+	}
 	if b.disabled {
 		m["disabled"] = b.disabled
 	}

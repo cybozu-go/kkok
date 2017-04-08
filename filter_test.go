@@ -237,6 +237,7 @@ func testBaseFilterAddParams(t *testing.T) {
 
 	now := time.Now().UTC()
 	params := map[string]interface{}{
+		"label":    "label1",
 		"disabled": true,
 		"all":      true,
 		"if":       "alerts.length > 1",
@@ -251,6 +252,10 @@ func testBaseFilterAddParams(t *testing.T) {
 
 	m := make(map[string]interface{})
 	f.AddParams(m)
+
+	if m["label"].(string) != "label1" {
+		t.Error(`m["label"].(string) != "label1"`)
+	}
 
 	if !m["disabled"].(bool) {
 		t.Error(`!m["disabled"].(bool)`)
