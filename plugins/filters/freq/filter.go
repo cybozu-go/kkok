@@ -10,6 +10,8 @@ import (
 )
 
 const (
+	filterType = "freq"
+
 	defaultDuration = 600 * time.Second
 
 	defaultDivisor = 10

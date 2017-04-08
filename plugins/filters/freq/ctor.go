@@ -8,8 +8,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const filterType = "freq"
-
 func ctor(id string, params map[string]interface{}) (kkok.Filter, error) {
 	f := newFilter()
 	durationSeconds, err := util.GetInt("duration", params)
