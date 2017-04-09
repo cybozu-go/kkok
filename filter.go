@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cybozu-go/log"
 	"github.com/pkg/errors"
 	"github.com/robertkrimen/otto"
 )
@@ -273,6 +274,11 @@ func (b *BaseFilter) EvalAlert(a *Alert) (bool, error) {
 		value, err := a.Eval(b.ifScript)
 		if err != nil {
 			return false, err
+		}
+		if !value.IsBoolean() {
+			log.Warn("kkok: not a boolean expression", map[string]interface{}{
+				"expression": b.origIf,
+			})
 		}
 		bvalue, _ := value.ToBoolean()
 		return bvalue, nil
