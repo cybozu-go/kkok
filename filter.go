@@ -277,6 +277,7 @@ func (b *BaseFilter) EvalAlert(a *Alert) (bool, error) {
 		}
 		if !value.IsBoolean() {
 			log.Warn("kkok: not a boolean expression", map[string]interface{}{
+				"id":         b.id,
 				"expression": b.origIf,
 			})
 		}
