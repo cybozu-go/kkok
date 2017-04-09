@@ -99,10 +99,10 @@ via REST API.  All filters have the following properties:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| `type` | string | Filter type such as `discard`, `group`, `route`. |
 | `id` | string | The unique ID of the filter. |
 | `label` | string | Arbitrary string label. |
-| `type` | string | Filter type such as `discard`, `group`, `route`. |
-| `active` | bool | Inactive filters will not be used. |
+| `disabled` | bool | Disabled filters will not be used. |
 | `all` | bool | If `true`, the filter works for all alerts (not one-by-one). |
 | `if` | string/array of strings | Filter condition. See below. |
 
@@ -122,18 +122,14 @@ the array of strings to `os/exec.Command`.  If the command exits
 successfully, the filter work for the alerts.  When `all` is `false`,
 the filter feeds a JSON object representing an alert via stdin.
 
-Not all filters can be configured by `all`.  For example, `group` filter
-always works as if `all` is `true`.
-
 For example, the following filter groups all alerts if the number of
 pooled alerts is larger than 10.
 
 ```
 [[filters]]
+type = "group"
 id = "toomanyalerts"
 label = "Too many alerts"
-type = "group"
-active = true
 all = true
 if = "alerts.length > 10"
 ```
