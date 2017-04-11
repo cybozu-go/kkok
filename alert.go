@@ -71,7 +71,7 @@ func (a *Alert) Validate() error {
 		return errors.New("too long Title")
 	}
 	if strings.Contains(a.Title, "\n") {
-		return errors.New("multi-line From")
+		return errors.New("multi-line Title")
 	}
 
 	return nil
