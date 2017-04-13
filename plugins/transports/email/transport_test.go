@@ -267,6 +267,8 @@ func testDeliver(t *testing.T) {
 
 	tr := &transport{
 		from: "foo@example.com",
+		to:   []string{"kkok@example.org"},
+		cc:   []string{"kkok@example.org"},
 		bcc:  []string{"bar@example.org", "zot@example.org"},
 		host: testHost,
 		port: testPort,
