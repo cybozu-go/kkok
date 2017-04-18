@@ -1,0 +1,2 @@
+{{slack .Message}}
+{{slack .Info.info1}}
