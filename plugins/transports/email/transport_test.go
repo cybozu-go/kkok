@@ -261,7 +261,9 @@ func testCompose(t *testing.T) {
 
 func testDeliver(t *testing.T) {
 	if len(testHost) == 0 {
-		t.Skip("No TEST_MAILHOST envvar")
+		t.Skip(`No TEST_MAILHOST envvar.
+You may run "python -m smtpd -n -d -c DebuggingServer" and
+set TEST_MAILHOST=localhost environment variable.`)
 	}
 	t.Parallel()
 
