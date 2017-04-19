@@ -83,7 +83,7 @@ func (t *transport) format(a *kkok.Alert) (*attachment, error) {
 	}
 
 	if t.color != nil {
-		v, err := a.Eval(t.color)
+		v, err := kkok.NewVM().EvalAlert(a, t.color)
 		if err != nil {
 			return nil, errors.Wrap(err, t.String())
 		}
