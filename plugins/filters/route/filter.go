@@ -67,7 +67,7 @@ func (f *filter) route(a *kkok.Alert) {
 
 func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	if f.BaseFilter.All() {
-		ok, err := f.BaseFilter.EvalAllAlerts(alerts)
+		ok, err := f.BaseFilter.IfAll(alerts)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +81,7 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	}
 
 	for _, a := range alerts {
-		ok, err := f.BaseFilter.EvalAlert(a)
+		ok, err := f.BaseFilter.If(a)
 		if err != nil {
 			return nil, err
 		}

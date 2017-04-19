@@ -64,7 +64,7 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	var newAlerts []*kkok.Alert
 
 	if f.BaseFilter.All() {
-		ok, err := f.BaseFilter.EvalAllAlerts(alerts)
+		ok, err := f.BaseFilter.IfAll(alerts)
 		if err != nil {
 			return nil, errors.Wrap(err, "exec:"+f.ID())
 		}
@@ -91,7 +91,7 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	}
 
 	for _, a := range alerts {
-		ok, err := f.BaseFilter.EvalAlert(a)
+		ok, err := f.BaseFilter.If(a)
 		if err != nil {
 			return nil, errors.Wrap(err, "exec:"+f.ID())
 		}

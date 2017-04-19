@@ -19,7 +19,7 @@ func (f *filter) Params() kkok.PluginParams {
 
 func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	if f.BaseFilter.All() {
-		ok, err := f.BaseFilter.EvalAllAlerts(alerts)
+		ok, err := f.BaseFilter.IfAll(alerts)
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +32,7 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 
 	filtered := make([]*kkok.Alert, 0, len(alerts))
 	for _, a := range alerts {
-		ok, err := f.BaseFilter.EvalAlert(a)
+		ok, err := f.BaseFilter.If(a)
 		if err != nil {
 			return nil, err
 		}

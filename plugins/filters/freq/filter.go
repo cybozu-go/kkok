@@ -62,7 +62,7 @@ func (f *filter) Params() kkok.PluginParams {
 func (f *filter) calc(a *kkok.Alert, now time.Time) error {
 	var v interface{}
 	if f.foreach != nil {
-		vv, err := a.Eval(f.foreach)
+		vv, err := f.BaseFilter.EvalAlert(a, f.foreach)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	now := time.Now()
 
 	if f.BaseFilter.All() {
-		ok, err := f.BaseFilter.EvalAllAlerts(alerts)
+		ok, err := f.BaseFilter.IfAll(alerts)
 		if err != nil {
 			return nil, errors.Wrap(err, "freq:"+f.ID())
 		}
@@ -110,7 +110,7 @@ func (f *filter) Process(alerts []*kkok.Alert) ([]*kkok.Alert, error) {
 	}
 
 	for _, a := range alerts {
-		ok, err := f.BaseFilter.EvalAlert(a)
+		ok, err := f.BaseFilter.If(a)
 		if err != nil {
 			return nil, errors.Wrap(err, "freq:"+f.ID())
 		}

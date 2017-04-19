@@ -409,6 +409,10 @@ func testProcessError(t *testing.T) {
 	t.Parallel()
 
 	f := &filter{}
+	err := f.Init("id", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	s, err := kkok.CompileJS(`alerts.length`)
 	if err != nil {
 		t.Fatal(err)
@@ -425,6 +429,10 @@ func testProcessBy(t *testing.T) {
 	t.Parallel()
 
 	f := &filter{}
+	err := f.Init("id", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	s, err := kkok.CompileJS(`alert.From`)
 	if err != nil {
 		t.Fatal(err)
