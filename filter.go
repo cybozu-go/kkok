@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cybozu-go/kkok/util"
 	"github.com/cybozu-go/log"
 	"github.com/pkg/errors"
 	"github.com/robertkrimen/otto"
@@ -51,6 +52,9 @@ type Filter interface {
 
 	// Expired returns true iff the filter has already been expired.
 	Expired() bool
+
+	// Reload reloads JavaScript files.
+	Reload() error
 }
 
 // FilterConstructor is a function signature for filter construction.
@@ -88,6 +92,8 @@ func NewFilter(typ string, params map[string]interface{}) (Filter, error) {
 //
 // Filter plugins MUST embed BaseFilter anonymously.
 type BaseFilter struct {
+	VM
+
 	id        string
 	label     string
 	dynamic   bool
@@ -96,6 +102,7 @@ type BaseFilter struct {
 	origIf    interface{}
 	ifScript  *otto.Script
 	ifCommand *exec.Cmd
+	scripts   []string
 	expire    time.Time
 }
 
@@ -103,14 +110,15 @@ type BaseFilter struct {
 //
 // Significant keys in params are:
 //
-//    label    string  Arbitrary string label of the filter.
-//    disabled bool    If true, this filter is disabled.
-//    expire   string  RFC3339 format time at which this filter expires.
-//    all      bool    If true, the filter process all alerts at once.
+//    label    string    Arbitrary string label of the filter.
+//    disabled bool      If true, this filter is disabled.
+//    expire   string    RFC3339 format time at which this filter expires.
+//    all      bool      If true, the filter process all alerts at once.
 //    if       string|array of strings
-//                     string must be a JavaScript expression.
-//                     array of strings must be a command and arguments
-//                     to be invoked.
+//                       string must be a JavaScript expression.
+//                       array of strings must be a command and arguments
+//                       to be invoked.
+//    scripts  []string  JavaScript filenames.
 func (b *BaseFilter) Init(id string, params map[string]interface{}) error {
 	if !reFilterID.MatchString(id) {
 		return errors.New("invalid filter id: " + id)
@@ -151,6 +159,20 @@ func (b *BaseFilter) Init(id string, params map[string]interface{}) error {
 			return errors.New("all must be a boolean")
 		}
 		b.all = all
+	}
+
+	scripts, err := util.GetStringSlice("scripts", params)
+	switch {
+	case err == nil:
+		b.scripts = scripts
+	case util.IsNotFound(err):
+	default:
+		return errors.Wrap(err, "scripts")
+	}
+
+	err = b.Reload()
+	if err != nil {
+		return errors.Wrap(err, "scripts")
 	}
 
 	if _, ok := params["if"]; !ok {
@@ -210,6 +232,9 @@ func (b *BaseFilter) AddParams(m map[string]interface{}) {
 	if b.all {
 		m["all"] = b.all
 	}
+	if len(b.scripts) > 0 {
+		m["scripts"] = b.scripts
+	}
 	if b.origIf != nil {
 		m["if"] = b.origIf
 	}
@@ -268,10 +293,21 @@ func (b *BaseFilter) Expired() bool {
 	return time.Now().After(b.expire)
 }
 
-// EvalAlert evaluates an alert with "if" condition.
-func (b *BaseFilter) EvalAlert(a *Alert) (bool, error) {
+// Reload reloads JavaScript files.
+func (b *BaseFilter) Reload() error {
+	if len(b.scripts) == 0 {
+		b.VM = VM{baseOtto}
+		return nil
+	}
+
+	b.VM = NewVM()
+	return b.VM.Load(b.scripts)
+}
+
+// If evaluates an alert with "if" condition.
+func (b *BaseFilter) If(a *Alert) (bool, error) {
 	if b.ifScript != nil {
-		value, err := a.Eval(b.ifScript)
+		value, err := b.VM.EvalAlert(a, b.ifScript)
 		if err != nil {
 			return false, err
 		}
@@ -313,17 +349,18 @@ func (b *BaseFilter) EvalAlert(a *Alert) (bool, error) {
 	return true, nil
 }
 
-// EvalAllAlerts evaluates all alerts with "if" condition.
-func (b *BaseFilter) EvalAllAlerts(alerts []*Alert) (bool, error) {
+// IfAll evaluates all alerts with "if" condition.
+func (b *BaseFilter) IfAll(alerts []*Alert) (bool, error) {
 	if b.ifScript != nil {
-		vm := baseOtto.Copy()
-		err := vm.Set("alerts", alerts)
+		value, err := b.VM.EvalAlerts(alerts, b.ifScript)
 		if err != nil {
 			return false, err
 		}
-		value, err := vm.Run(b.ifScript)
-		if err != nil {
-			return false, err
+		if !value.IsBoolean() {
+			log.Warn("kkok: not a boolean expression", map[string]interface{}{
+				"id":         b.id,
+				"expression": b.origIf,
+			})
 		}
 		bvalue, _ := value.ToBoolean()
 		return bvalue, nil

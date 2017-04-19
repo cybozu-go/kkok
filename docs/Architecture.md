@@ -105,17 +105,23 @@ via REST API.  All filters have the following properties:
 | `disabled` | bool | Disabled filters will not be used. |
 | `all` | bool | If `true`, the filter works for all alerts (not one-by-one). |
 | `if` | string/array of strings | Filter condition. See below. |
+| `scripts` | []string | JavaScript files to be loaded. |
 
 Filters with `if` will only work for alerts matching the given condition.
 
-`if` may be either a string of JavaScript boolean expression to
-test an alert or an array of alerts should be filtered, or an array
-of strings to invoke an external command.
+`if` may be either:
+1) a string of JavaScript boolean expression to test an alert, or
+2) an array of alerts should be filtered, or
+3) an array of strings to invoke an external command.
 
 For JavaScript expressions, when `all` is `false`, the filter will
 assign each alert as `alert` variable and evaluate the JavaScript
 expression.  When `all` is `true`, the filter will assign an array of
 all alerts as `alerts`.
+
+In addition, `scripts` may be specified to load JavaScript files
+before evaluating `if` expressions.  Scripts are reloaded from
+files every time a filter starts evaluation.
 
 For external commands, the filter executes the command by passing
 the array of strings to `os/exec.Command`.  If the command exits

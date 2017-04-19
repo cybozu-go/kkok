@@ -2,6 +2,7 @@ package kkok
 
 import (
 	"os/exec"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -49,7 +50,7 @@ func testBaseFilterAll(t *testing.T) {
 		t.Error(`!b.All()`)
 	}
 
-	ok, err := b.EvalAllAlerts(nil)
+	ok, err := b.IfAll(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +58,7 @@ func testBaseFilterAll(t *testing.T) {
 		t.Error("condition should not be met")
 	}
 
-	ok, err = b.EvalAllAlerts([]*Alert{{}, {}})
+	ok, err = b.IfAll([]*Alert{{}, {}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +86,7 @@ func testBaseFilterOne(t *testing.T) {
 		t.Error(`b.All()`)
 	}
 
-	ok, err := b.EvalAlert(&Alert{})
+	ok, err := b.If(&Alert{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +94,7 @@ func testBaseFilterOne(t *testing.T) {
 		t.Error("condition should not be met")
 	}
 
-	ok, err = b.EvalAlert(&Alert{From: "hoge"})
+	ok, err = b.If(&Alert{From: "hoge"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +110,7 @@ func testBaseFilterOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ok, err = b2.EvalAlert(&Alert{})
+	ok, err = b2.If(&Alert{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,12 +126,43 @@ func testBaseFilterOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ok, err = b3.EvalAlert(&Alert{})
+	ok, err = b3.If(&Alert{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !ok {
 		t.Error("condition should be met")
+	}
+}
+
+func testBaseFilterScripts(t *testing.T) {
+	t.Parallel()
+
+	params := map[string]interface{}{
+		"scripts": []string{"testdata/1.js", "testdata/2.js"},
+		"if":      "a = data[2]; data[2] = 0; a == 3;",
+	}
+
+	b, err := newBaseFilter("id", params)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ok, err := b.If(&Alert{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Error(`!ok`)
+	}
+
+	// confirm VM state has not been altered
+	ok, err = b.If(&Alert{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Error(`!ok`)
 	}
 }
 
@@ -144,6 +176,14 @@ func testBaseFilterParseError(t *testing.T) {
 	_, err := newBaseFilter("id", params)
 	if err == nil {
 		t.Fatal("if must cause a parse error")
+	}
+
+	params = map[string]interface{}{
+		"scripts": []string{"testdata/invalid.js"},
+	}
+	_, err = newBaseFilter("id", params)
+	if err == nil {
+		t.Fatal("scripts must cause a parse error")
 	}
 	t.Log(err)
 }
@@ -165,7 +205,7 @@ func testBaseFilterCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ok, err := b.EvalAlert(&Alert{})
+	ok, err := b.If(&Alert{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,7 +213,7 @@ func testBaseFilterCommand(t *testing.T) {
 		t.Error("condition should not be met")
 	}
 
-	ok, err = b.EvalAlert(&Alert{From: "hoge"})
+	ok, err = b.If(&Alert{From: "hoge"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,6 +280,7 @@ func testBaseFilterAddParams(t *testing.T) {
 		"label":    "label1",
 		"disabled": true,
 		"all":      true,
+		"scripts":  []string{"testdata/1.js"},
 		"if":       "alerts.length > 1",
 		"expire":   now.Format(time.RFC3339Nano),
 	}
@@ -265,6 +306,10 @@ func testBaseFilterAddParams(t *testing.T) {
 		t.Error(`!m["all"].(bool)`)
 	}
 
+	if !reflect.DeepEqual(m["scripts"], []string{"testdata/1.js"}) {
+		t.Error(`!reflect.DeepEqual(m["scripts"], []string{"testdata/1.js"})`)
+	}
+
 	if m["if"].(string) != "alerts.length > 1" {
 		t.Error(`m["if"].(string) != "alerts.length > 1"`)
 	}
@@ -277,6 +322,7 @@ func testBaseFilterAddParams(t *testing.T) {
 func TestBaseFilter(t *testing.T) {
 	t.Run("All", testBaseFilterAll)
 	t.Run("One", testBaseFilterOne)
+	t.Run("Scripts", testBaseFilterScripts)
 	t.Run("ParseError", testBaseFilterParseError)
 	t.Run("Command", testBaseFilterCommand)
 	t.Run("Expire", testBaseFilterExpire)

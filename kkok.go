@@ -74,9 +74,18 @@ func (k *Kkok) Handle(alerts []*Alert) {
 			continue
 		}
 
+		err = f.Reload()
+		if err != nil {
+			log.Error("[kkok] failed to reload", map[string]interface{}{
+				log.FnError: err.Error(),
+				"filter":    f.ID(),
+			})
+			return
+		}
+
 		alerts, err = f.Process(alerts)
 		if err != nil {
-			log.Error("failed to filter alerts", map[string]interface{}{
+			log.Error("[kkok] failed to filter alerts", map[string]interface{}{
 				log.FnError: err.Error(),
 				"filter":    f.ID(),
 				"nalerts":   len(alerts),
@@ -85,7 +94,7 @@ func (k *Kkok) Handle(alerts []*Alert) {
 		}
 
 		if len(alerts) == 0 {
-			log.Info("filters reduced all alerts", map[string]interface{}{
+			log.Info("[kkok] filters reduced all alerts", map[string]interface{}{
 				"filter": f.ID(),
 			})
 			return
@@ -210,7 +219,7 @@ func (k *Kkok) sendAlerts(alerts []*Alert) {
 	defer k.lkr.Unlock()
 
 	for id, r := range k.routes {
-		log.Info("sending alerts", map[string]interface{}{
+		log.Info("[kkok] sending alerts", map[string]interface{}{
 			"route":   id,
 			"nalerts": len(alerts),
 		})
@@ -218,7 +227,7 @@ func (k *Kkok) sendAlerts(alerts []*Alert) {
 		for _, t := range r {
 			err := t.Deliver(alerts)
 			if err != nil {
-				log.Error("failed to send alerts", map[string]interface{}{
+				log.Error("[kkok] failed to send alerts", map[string]interface{}{
 					log.FnError: err.Error(),
 					"route":     id,
 					"transport": t.String(),
