@@ -100,6 +100,9 @@ func getAddressList(s []string, filename string) ([]string, error) {
 
 	f, err := os.Open(filename)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return s, nil
+		}
 		return nil, err
 	}
 	defer f.Close()

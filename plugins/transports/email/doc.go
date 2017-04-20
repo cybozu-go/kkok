@@ -28,7 +28,8 @@ The plugin takes these construction parameters:
 Recipient addresses are statically provided by "to", "cc", or "bcc".
 If "to_file", "cc_file", or "bcc_file" is given, the file contents
 will be (re-)read each time when alerts are sent.  The contents shall
-list mail addresses line by line.
+list mail addresses line by line.  If a file specified in "to_file",
+"cc_file", or "bcc_file" does not exist, the plugin just ignores it.
 
 To customize the email body, set "template" to a template file.
 The template must be written for text/template package.

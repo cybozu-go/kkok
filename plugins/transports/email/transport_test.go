@@ -150,9 +150,13 @@ func testAddressListNoFile(t *testing.T) {
 }
 
 func testAddressListNotFound(t *testing.T) {
-	_, err := getAddressList([]string{}, "/not/found/file")
-	if err == nil {
-		t.Error(`err == nil`)
+	s, err := getAddressList([]string{"abc"}, "/not/found/file")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(s, []string{"abc"}) {
+		t.Error(`!reflect.DeepEqual(s, []string{"abc"})`)
 	}
 }
 
@@ -268,12 +272,13 @@ set TEST_MAILHOST=localhost environment variable.`)
 	t.Parallel()
 
 	tr := &transport{
-		from: "foo@example.com",
-		to:   []string{"kkok@example.org"},
-		cc:   []string{"kkok@example.org"},
-		bcc:  []string{"bar@example.org", "zot@example.org"},
-		host: testHost,
-		port: testPort,
+		from:   "foo@example.com",
+		to:     []string{"kkok@example.org"},
+		cc:     []string{"kkok@example.org"},
+		bcc:    []string{"bar@example.org", "zot@example.org"},
+		toFile: "/file/not/found", // safely ignored.
+		host:   testHost,
+		port:   testPort,
 	}
 	err := tr.Deliver([]*kkok.Alert{
 		{
