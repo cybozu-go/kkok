@@ -10,8 +10,8 @@ https://api.slack.com/docs/message-attachments
 The plugin takes these construction parameters:
 
     Name       Type        Default     Description
-    url        string                  Incoming webhook URL.  Required.
     label      string      ""          Arbitrary string label.
+    url        string                  Incoming webhook URL.  Required.
     max_retry  int         3           Max retry count when server returns 500.
     name       string      ""          Customize the user name.
     icon       string      ""          Customize the user icon.  Emoji only.

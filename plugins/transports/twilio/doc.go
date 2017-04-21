@@ -11,6 +11,7 @@ comply these rate limits.
 The plugin takes these construction parameters:
 
     Name        Type        Default     Description
+    label       string      ""          Arbitrary string label.
     account     string                  AccountSID.  Required.
     key_sid     string      ""          API key SID.  Optional.  See below.
     token       string                  AuthToken or API key Secret.  Required.

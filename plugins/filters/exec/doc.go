@@ -13,7 +13,7 @@ plugin takes these parameters:
     Name      Type       Default   Description
     command   []string             Command and arguments.  Required.
     timeout   int        5         Seconds before killing the command.
-                                   If max_time is 0, the command will not be killed.
+                                   If 0, the command will not be killed.
 
 Example snippet for TOML configuration:
 

@@ -11,8 +11,8 @@ built-in as DefaultTemplate.
 The plugin takes these construction parameters:
 
     Name      Type        Default     Description
+    label     string      ""          Arbitrary string label.
     from      string                  Address for From header.  Required.
-    label     string      ""          Arbitrary string label of the transport.
     host      string      localhost   SMTP server name.
     port      int         25          SMTP server port.
     user      string      ""          Username for SMTP auth.

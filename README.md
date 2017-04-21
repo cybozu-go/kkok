@@ -56,7 +56,7 @@ go get -u github.com/cybozu-go/kkok/...
 Usage
 -----
 
-Read [Usage.md](Usage.md).
+Read [Usage.md](docs/Usage.md) and [API.md](docs/API.md).
 
 License
 -------
