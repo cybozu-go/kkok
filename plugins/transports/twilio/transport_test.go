@@ -271,7 +271,7 @@ func testDeliverCountOnly(t *testing.T) {
 		t.Fatal(`len(ms) != 1`)
 	}
 
-	v, err := url.ParseQuery(ms[0].payload)
+	v, _ := url.ParseQuery(ms[0].payload)
 	t.Log(v.Get("Body"))
 }
 
@@ -346,7 +346,7 @@ func testDeliverMaxLength(t *testing.T) {
 			t.Fatal(`len(ms) != 1`)
 		}
 
-		v, err := url.ParseQuery(ms[0].payload)
+		v, _ := url.ParseQuery(ms[0].payload)
 		if v.Get("Body") != expect {
 			t.Error(`v.Get("Body") != expect`)
 		}

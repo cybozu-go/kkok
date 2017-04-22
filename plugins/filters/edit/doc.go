@@ -19,7 +19,7 @@ these properties:
     Stats    Object         ditto
     Sub      []*kkok.Alert  (Go slice, only for reference)
 
-This filter does not (yet) support "all" contruction parameter.
+This filter does not (yet) support "all" construction parameter.
 Use "exec" filter in case this filter is too limited.
 
 In addition to the standard filter construction parameters, this
