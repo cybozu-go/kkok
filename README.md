@@ -32,6 +32,7 @@ Features
     * `discard`: discard alerts based on the given conditions.
     * `group`: merge alerts into groups by field values.
     * `route`: add or replace routes to alert receivers.
+    * `edit`: edit alerts by JavaScript.
     * `exec`: invoke an external command to edit alerts.
 
 * Transports:
