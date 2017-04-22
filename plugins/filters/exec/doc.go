@@ -31,10 +31,10 @@ Another example to process alerts one by one:
     id          = "edit_subject"
     label       = "add prefix to subjects for emergency alerts"
     command     = ["jq", """
-if .Routes|contains(["emergency"]) then
-    . + {"Title": ("[warn] " + .Title)}
-else
-    .
-end"""]
+    if .Routes|contains(["emergency"]) then
+        . + {"Title": ("[warn] " + .Title)}
+    else
+        .
+    end"""]
 */
 package exec

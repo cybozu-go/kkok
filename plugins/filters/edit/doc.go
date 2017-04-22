@@ -44,14 +44,14 @@ Another example to remove a route:
     id          = "removeroute"
     label       = "remove r1 route."
     code        = """
-routes = new Array();
-for( i = 0; i < alert.Routes.length; i++ ) {
-    if( alert.Routes[i] != "r1" ) {
-        routes.push(alert.Routes[i]);
+    routes = new Array();
+    for( i = 0; i < alert.Routes.length; i++ ) {
+        if( alert.Routes[i] != "r1" ) {
+            routes.push(alert.Routes[i]);
+        }
     }
-}
-alert.Routes = routes;
-"""
+    alert.Routes = routes;
+    """
 
 See test cases in convert_test.go for more examples.
 */
