@@ -118,6 +118,11 @@ func fromObject(obj *otto.Object) (*kkok.Alert, error) {
 		}
 	}
 
+	err = a.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	return a, nil
 }
 

@@ -122,6 +122,11 @@ func TestConvert(t *testing.T) {
 			`alert.From = true;`,
 			nil,
 		},
+		"empty_from": {
+			newAlert(),
+			`alert.From = "";`,
+			nil,
+		},
 		"host": {
 			newAlert(),
 			`alert.Host = "テスト";`,
@@ -140,6 +145,11 @@ func TestConvert(t *testing.T) {
 		"invalid_title": {
 			newAlert(),
 			`alert.Title = true;`,
+			nil,
+		},
+		"empty_title": {
+			newAlert(),
+			`alert.Title = "";`,
 			nil,
 		},
 		"message": {
