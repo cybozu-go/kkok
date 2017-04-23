@@ -94,18 +94,18 @@ Filter
 
 Filters edit alerts and/or do whatever for alert handling.
 
-Filters can define statically in configuration files or dynamically
+Filters can be defined statically in configuration files or dynamically
 via REST API.  All filters have the following properties:
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| `type` | string | Filter type such as `discard`, `group`, `route`. |
-| `id` | string | The unique ID of the filter. |
-| `label` | string | Arbitrary string label. |
+| Name       | Type | Description |
+| ---------- | ---- | ----------- |
+| `type`     | string | Filter type such as `discard`, `group`, `route`. |
+| `id`       | string | The unique ID of the filter. |
+| `label`    | string | Arbitrary string label. |
 | `disabled` | bool | Disabled filters will not be used. |
-| `all` | bool | If `true`, the filter works for all alerts (not one-by-one). |
-| `if` | string/array of strings | Filter condition. See below. |
-| `scripts` | []string | JavaScript files to be loaded. |
+| `all`      | bool | If `true`, the filter works for all alerts (not one-by-one). |
+| `if`       | string/array of strings | Filter condition. See below. |
+| `scripts`  | []string | JavaScript files to be loaded. |
 
 Filters with `if` will only work for alerts matching the given condition.
 
@@ -146,6 +146,14 @@ Filters defined first will be applied first.
 
 This means dynamic filters will always be applied after static filters.
 
+### Disabling filters
+
+Filters can be disabled completely or temporarily until a given time.
+This helps operators suppress alerts.
+
+Disabling filters temporarily is implemented as _temporary inactivation_ of
+filters.
+
 ### Temporary filters
 
 Dynamic filters have an extra property called `expire` whose value
@@ -153,7 +161,10 @@ is an RFC3339 format date string.  Filters will be removed automatically
 when they *expire* as of the `expire` property values.
 
 Dynamic filters with expiration dates can be used to, for example,
-suppress alerts temporarily.
+change routes temporarily.
+
+Temporary filters can be considered _temporarily enabled filters_.
+For this reason, kkok does not provide temporary activation of filters.
 
 Mute
 ----

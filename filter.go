@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/cybozu-go/kkok/util"
@@ -44,11 +45,17 @@ type Filter interface {
 	// This should be used privately inside kkok.
 	SetDynamic()
 
-	// Disabled returns true iff the filter is disabled.
+	// Disabled returns true if the filter is disabled or inactive.
 	Disabled() bool
 
-	// Enable enables the filter if e == true, otherwise disables the filter.
+	// Enable enables the filter if e is true, otherwise disables the filter.
+	// If the filter is currently inactive and e is true, then the filter
+	// gets activated immediately.
 	Enable(e bool)
+
+	// Inactivate disables the filter until the given time.
+	// Calling Enable(true) immediately re-enables the filter.
+	Inactivate(until time.Time)
 
 	// Expired returns true iff the filter has already been expired.
 	Expired() bool
@@ -94,16 +101,21 @@ func NewFilter(typ string, params map[string]interface{}) (Filter, error) {
 type BaseFilter struct {
 	VM
 
+	// constants
 	id        string
 	label     string
 	dynamic   bool
-	disabled  bool
 	all       bool
 	origIf    interface{}
 	ifScript  *otto.Script
 	ifCommand *exec.Cmd
 	scripts   []string
 	expire    time.Time
+
+	// dynamic values
+	mu            sync.Mutex
+	disabled      bool
+	inactiveUntil time.Time
 }
 
 // Init initializes BaseFilter with parameters.
@@ -114,9 +126,9 @@ type BaseFilter struct {
 //    disabled bool      If true, this filter is disabled.
 //    expire   string    RFC3339 format time at which this filter expires.
 //    all      bool      If true, the filter process all alerts at once.
-//    if       string|array of strings
+//    if       string | []string
 //                       string must be a JavaScript expression.
-//                       array of strings must be a command and arguments
+//                       []string must be a command and arguments
 //                       to be invoked.
 //    scripts  []string  JavaScript filenames.
 func (b *BaseFilter) Init(id string, params map[string]interface{}) error {
@@ -264,14 +276,41 @@ func (b *BaseFilter) SetDynamic() {
 	b.dynamic = true
 }
 
-// Disabled returns true iff the filter is disabled.
+// Disabled returns true if the filter is disabled or inactive.
 func (b *BaseFilter) Disabled() bool {
-	return b.disabled
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.disabled {
+		return true
+	}
+	if b.inactiveUntil.IsZero() {
+		return false
+	}
+	return time.Now().Before(b.inactiveUntil)
 }
 
-// Enable enables the filter if e == true, otherwise disables the filter.
+// Enable enables the filter if e is true, otherwise disables the filter.
+// If the filter is currently inactive and e is true, then the filter
+// gets activated immediately.
 func (b *BaseFilter) Enable(e bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	b.disabled = !e
+	if e {
+		var zero time.Time
+		b.inactiveUntil = zero
+	}
+}
+
+// Inactivate disables the filter until the given time.
+// Calling Enable(true) immediately re-enables the filter.
+func (b *BaseFilter) Inactivate(until time.Time) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.inactiveUntil = until
 }
 
 // All returns true iff the filter processes all alerts at once.

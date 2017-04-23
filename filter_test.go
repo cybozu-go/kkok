@@ -166,6 +166,53 @@ func testBaseFilterScripts(t *testing.T) {
 	}
 }
 
+func testBaseFilterInactivate(t *testing.T) {
+	t.Parallel()
+
+	f, err := newBaseFilter("id", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if f.Disabled() {
+		t.Error(`f.Disabled()`)
+	}
+
+	f.Inactivate(time.Now().Add(100 * time.Millisecond))
+	if !f.Disabled() {
+		t.Error(`!f.Disabled()`)
+	}
+
+	time.Sleep(110 * time.Millisecond)
+	if f.Disabled() {
+		t.Error(`f.Disabled()`)
+	}
+
+	f.Inactivate(time.Now().Add(100 * time.Millisecond))
+	if !f.Disabled() {
+		t.Error(`!f.Disabled()`)
+	}
+	f.Enable(true)
+	if f.Disabled() {
+		t.Error(`f.Disabled()`)
+	}
+
+	f, _ = newBaseFilter("id", map[string]interface{}{
+		"disabled": true,
+	})
+	if !f.Disabled() {
+		t.Error(`!f.Disabled()`)
+	}
+	f.Inactivate(time.Now().Add(100 * time.Millisecond))
+	if !f.Disabled() {
+		t.Error(`!f.Disabled()`)
+	}
+	time.Sleep(110 * time.Millisecond)
+	if !f.Disabled() {
+		t.Error(`!f.Disabled()`)
+	}
+}
+
 func testBaseFilterParseError(t *testing.T) {
 	t.Parallel()
 	params := map[string]interface{}{
@@ -323,6 +370,7 @@ func TestBaseFilter(t *testing.T) {
 	t.Run("All", testBaseFilterAll)
 	t.Run("One", testBaseFilterOne)
 	t.Run("Scripts", testBaseFilterScripts)
+	t.Run("Inactivate", testBaseFilterInactivate)
 	t.Run("ParseError", testBaseFilterParseError)
 	t.Run("Command", testBaseFilterCommand)
 	t.Run("Expire", testBaseFilterExpire)
