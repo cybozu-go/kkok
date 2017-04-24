@@ -26,6 +26,16 @@ func getMethod(r *http.Request) string {
 	return r.Method
 }
 
+// getID takes "ID" or "ID/leftover" as path and returns
+// ID and leftover.
+func getID(path string) (id, leftover string) {
+	idx := strings.IndexByte(path, byte('/'))
+	if idx == -1 {
+		return path, ""
+	}
+	return path[0:idx], path[idx+1:]
+}
+
 type apiHandler struct {
 	token string
 	k     *Kkok
@@ -125,11 +135,14 @@ func (a *apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.HasPrefix(p, "/filters/") {
-		id := p[9:]
-		if !reFilterID.MatchString(id) {
+		id, action := getID(p[9:])
+		switch {
+		case !reFilterID.MatchString(id):
 			http.Error(w, "invalid filter id: "+id, http.StatusBadRequest)
-		} else {
+		case len(action) == 0:
 			a.handleFilter(w, r, id)
+		default:
+			a.handleFilterAction(w, r, id, action)
 		}
 		return
 	}
@@ -140,7 +153,7 @@ func (a *apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.HasPrefix(p, "/routes/") {
-		id := p[8:]
+		id, _ := getID(p[8:])
 		if !reRouteID.MatchString(id) {
 			http.Error(w, "invalid route id: "+id, http.StatusBadRequest)
 		} else {
@@ -274,6 +287,41 @@ func (a *apiHandler) deleteFilter(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 	http.Error(w, err.Error(), http.StatusInternalServerError)
+}
+
+func (a *apiHandler) handleFilterAction(w http.ResponseWriter, r *http.Request, id, action string) {
+	if getMethod(r) != "PUT" {
+		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	f := a.k.getFilter(id)
+	if f == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	switch action {
+	case "enable":
+		f.Enable(true)
+	case "disable":
+		f.Enable(false)
+	case "inactivate":
+		a.inactivateFilter(w, r, f)
+	default:
+		http.Error(w, "no such filter action: "+action, http.StatusBadRequest)
+	}
+}
+
+func (a *apiHandler) inactivateFilter(w http.ResponseWriter, r *http.Request, f Filter) {
+	var payload struct {
+		Until time.Time `json:"until"`
+	}
+	if !recvJSON(w, r, &payload) {
+		return
+	}
+
+	f.Inactivate(payload.Until)
 }
 
 func (a *apiHandler) getRoutes(w http.ResponseWriter, r *http.Request) {

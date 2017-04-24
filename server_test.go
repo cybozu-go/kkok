@@ -3,10 +3,13 @@ package kkok
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"mime"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
 type testAlertHandler struct {
@@ -453,6 +456,79 @@ func testServerFiltersIDDelete(t *testing.T) {
 	}
 }
 
+func testServerFilterAction(t *testing.T) {
+	t.Parallel()
+
+	k := NewKkok()
+	f1 := &dupFilter{}
+	f1.Init("f1", map[string]interface{}{
+		"disabled": true,
+	})
+	k.AddStaticFilter(f1)
+	if !f1.Disabled() {
+		t.Fatal(`!f1.Disabled()`)
+	}
+
+	f2 := &dupFilter{}
+	f2.Init("f2", nil)
+	k.AddStaticFilter(f2)
+	if f2.Disabled() {
+		t.Fatal(`f2.Disabled()`)
+	}
+
+	r := httptest.NewRequest("PUT", "http://localhost/filters/f1/enable", nil)
+	w := recordWithKkok(k, r)
+	if w.Code != http.StatusOK {
+		t.Error(`w.Code != http.StatusOK`)
+	}
+	if f1.Disabled() {
+		t.Error(`f1.Disabled()`)
+	}
+
+	r = httptest.NewRequest("PUT", "http://localhost/filters/f1/disable", nil)
+	w = recordWithKkok(k, r)
+	if w.Code != http.StatusOK {
+		t.Error(`w.Code != http.StatusOK`)
+	}
+	if !f1.Disabled() {
+		t.Error(`!f1.Disabled()`)
+	}
+
+	until := time.Now().Add(100 * time.Millisecond)
+	data := fmt.Sprintf(`{"until": "%s"}`, until.Format(time.RFC3339Nano))
+	r = httptest.NewRequest("PUT", "http://localhost/filters/f2/inactivate", strings.NewReader(data))
+	w = recordWithKkok(k, r)
+	if w.Code != http.StatusOK {
+		t.Error(`w.Code != http.StatusOK`)
+	}
+	if !f2.Disabled() {
+		t.Error(`!f2.Disabled()`)
+	}
+
+	time.Sleep(150 * time.Millisecond)
+	if f2.Disabled() {
+		t.Error(`f2.Disabled()`)
+	}
+
+	r = httptest.NewRequest("PUT", "http://localhost/filters/f3/enable", nil)
+	w = recordWithKkok(k, r)
+	if w.Code != http.StatusNotFound {
+		t.Error(`w.Code != http.StatusNotFound`)
+	}
+
+	r = httptest.NewRequest("PUT", "http://localhost/filters/f1/badaction", nil)
+	w = recordWithKkok(k, r)
+	if w.Code != http.StatusBadRequest {
+		t.Error(`w.Code != http.StatusBadRequest`)
+	}
+
+	r = httptest.NewRequest("POST", "http://localhost/filters/f1/enable", nil)
+	w = recordWithKkok(k, r)
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Error(`w.Code != http.StatusMethodNotAllowed`)
+	}
+}
+
 func testServerRoutesGet(t *testing.T) {
 	t.Parallel()
 
@@ -608,6 +684,7 @@ func TestServer(t *testing.T) {
 	t.Run("Filters/ID/Get", testServerFiltersIDGet)
 	t.Run("Filters/ID/Put", testServerFiltersIDPut)
 	t.Run("Filters/ID/Delete", testServerFiltersIDDelete)
+	t.Run("Filters/Action", testServerFilterAction)
 	t.Run("Routes/Get", testServerRoutesGet)
 	t.Run("Routes/ID/Get", testServerRoutesIDGet)
 	t.Run("Routes/ID/Put", testServerRoutesIDPut)

@@ -20,7 +20,7 @@ in "text/plain" or "text/html".
 
 ### Authentication
 
-kkok can be configured to require authenticate token for API usage.
+kkok can be configured to require authentication token for API usage.
 If configured, clients need to send the token with
 
     Authorization: Bearer TOKEN
@@ -68,6 +68,9 @@ Each subsection describes the method and the end point (URL) of an API.
 * [PUT /filters/ID](#put-filtersid)
 * [GET /filters/ID](#get-filtersid)
 * [DELETE /filters/ID](#delete-filtersid)
+* [PUT /filters/ID/enable](#put-filtersidenable)
+* [PUT /filters/ID/disable](#put-filtersiddisable)
+* [PUT /filters/ID/inactivate](#put-filtersidinactivate)
 * [GET /routes](#get-routes)
 * [PUT /routes/ID](#put-routesid)
 * [GET /routes/ID](#get-routesid)
@@ -156,6 +159,27 @@ Return a JSON representation of the filter specified by `ID`.
 ### DELETE /filters/ID
 
 Delete a filter specified by `ID`.
+
+### PUT /filters/ID/enable
+
+Enable the filter specified by `ID`.
+The body should be empty (Content-Length is 0).
+
+If the filter is currently inactive, it is activated.
+
+### PUT /filters/ID/disable
+
+Disable the filter specified by `ID`.
+The body should be empty (Content-Length is 0).
+
+### PUT /filters/ID/inactivate
+
+Inactivate the specified filter until the given time.
+The body must be a JSON object with the following single field:
+
+| Name    | Required | Type   | Description          |
+| ------- | -------- | ------ | -------------------- |
+| `until` | Yes      | string | RFC3339 date string. |
 
 ### GET /routes
 
