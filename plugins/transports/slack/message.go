@@ -46,7 +46,7 @@ func (a *attachment) addField(title string, value interface{}) {
 		f.Short = true
 	case string:
 		f.Value = EscapeSlack(v)
-		f.Short = (len(v) <= maxShortLength) && (!strings.ContainsRune(v, '\n'))
+		f.Short = (len(v) <= maxShortLength) && (!strings.Contains(v, "\n"))
 	default:
 		f.Value = EscapeSlack(fmt.Sprintf("%#v", v))
 		f.Short = false
