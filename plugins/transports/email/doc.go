@@ -40,6 +40,6 @@ Example snippet for TOML configuration:
     type        = "email"
     label       = "send alerts to alert@example.com"
     from        = "kkok@example.com"
-    to          = "alert@example.com"
+    to          = ["alert@example.com"]
 */
 package email

@@ -9,6 +9,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/kkok"
+	_ "github.com/cybozu-go/kkok/plugins/filters/all"
+	_ "github.com/cybozu-go/kkok/plugins/sources/all"
+	_ "github.com/cybozu-go/kkok/plugins/transports/all"
 	"github.com/cybozu-go/log"
 )
 
@@ -19,6 +22,7 @@ const (
 var (
 	configPath = flag.String("f", defaultConfigPath, "Configuration file name")
 	flgVersion = flag.Bool("v", false, "Print version and exit")
+	flgTest    = flag.Bool("test", false, "Test config file")
 )
 
 func main() {
@@ -79,12 +83,17 @@ func main() {
 
 	// start dispatcher
 	d := kkok.NewDispatcher(cfg.InitialDuration(), cfg.MaxDuration(), k)
-	cmd.Go(d.Run)
+	if !*flgTest {
+		cmd.Go(d.Run)
+	}
 
 	for _, p := range cfg.Sources {
 		src, err := kkok.NewSource(p.Type, p.Params)
 		if err != nil {
 			log.ErrorExit(err)
+		}
+		if *flgTest {
+			continue
 		}
 		cmd.Go(func(ctx context.Context) error {
 			return src.Run(ctx, d.Post)
@@ -96,6 +105,11 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+	if *flgTest {
+		// all configurations are tested.
+		return
+	}
+
 	err = s.ListenAndServe()
 	if err != nil {
 		log.ErrorExit(err)

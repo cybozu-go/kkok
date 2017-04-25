@@ -1,0 +1,197 @@
+# This is a sample TOML configuration for kkok.
+
+# Socket listening address for REST API.
+# The address must be "HOST:PORT" string where
+# HOST can be blank to listen on all interfaces.
+#
+# Default is ":19898"
+listen = ":19898"
+
+# api_token is used for REST API authentication if not empty.
+#api_token = "xxxxxxxxxxxxx"
+
+# Interval seconds to pool posted alerts before processing are
+# changed dynamically.  Initially, the interval starts from
+# initial_interval.  If one or more alerts are posted during
+# an interval, the interval seconds doubles until it reaches
+# max_interval.
+#
+# Default values for initial_interval and max_interval are 30 (seconds).
+initial_interval = 30
+max_interval     = 30
+
+# log section specifies logging configurations.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/cmd#LogConfig
+[log]
+#filename = "/var/log/kkok.log"
+level = "info"
+format = "plain"
+
+
+#-------------------------------------------------------------------------
+# Alert sources are defined as TOML list.  "type" is required.
+#
+# [[source]]
+# type = "xxx"
+# param1 = "value1"
+#
+# [[source]]
+# type = "yyy"
+# ...
+
+
+# maildir source plugin generates alerts from files in Maildir.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/sources/maildir
+[[source]]
+type        = "maildir"
+dir         = "/var/mail/kkok"
+interval    = 60
+
+
+#-------------------------------------------------------------------------
+# Filters are defined as TOML list.  "type" and "id" are required.
+#
+# [[filter]]
+# type   = "xxx"
+# id     = "id1"
+# param1 = "value1"
+#
+# [[filter]]
+# type   = "yyy"
+# id     = "id2"
+# ...
+
+
+# discard filter plugin eliminates alerts that match given conditions.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/filters/discard
+[[filter]]
+type        = "discard"
+id          = "ignorehost"
+label       = "ignore alerts from host1"
+if          = "alert.Host == 'host1'"
+
+# edit filter plugin edits alerts by JavaScript.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/filters/edit
+[[filter]]
+type        = "edit"
+id          = "addprefix"
+label       = "add prefix to alert Title"
+if          = "alert.From=='foo monitor'"
+code        = "alert.Title = '[foo] ' + alert.Title;"
+
+# exec filter plugin edits alerts by an external command.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/filters/exec
+[[filter]]
+type        = "exec"
+id          = "edit_subject"
+label       = "add prefix to subjects for emergency alerts"
+command     = ["jq", """
+if .Routes|contains(["emergency"]) then
+    . + {"Title": ("[warn] " + .Title)}
+else
+    .
+end"""]
+
+# freq filter plugin calculates frequency of alerts and
+# store it in the alert's Stats field.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/filters/freq
+[[filter]]
+type        = "freq"
+id          = "failed_process"
+label       = "frequency of process failures per host"
+divisor     = 10
+if          = "alert.From == 'process monitor'"
+foreach     = "alert.Host"
+
+# group filter plugin merges alerts into groups.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/filters/group
+[[filter]]
+type        = "group"
+id          = "group_by_host"
+label       = "merge alerts from process monitor"
+if          = "alert.From == 'process monitor'"
+by          = "alert.Host"
+title       = "some processes died"
+
+# route filter plugin adds or replaces routes to alerts.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/filters/route
+[[filter]]
+type        = "route"
+id          = "emergency_filter"
+label       = "route alerts from alive monitor to emergency"
+if          = "alert.From == 'alive monitor'"
+routes      = ["slack", "mail"]
+auto_mute   = true
+mute_routes = ["mail"]
+
+
+#-------------------------------------------------------------------------
+# Routes are defined as a map of list of transports.
+# A map key is used as a route's ID.  For example,
+#
+# [[route.notify]]
+# type   = "email"
+# ...
+#
+# This defines a transport in the list of "notify" route.
+# "type" is required.
+
+
+# email transport plugin sends alerts via SMTP.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/email
+[[route.notify]]
+type        = "email"
+label       = "send alerts to alert@example.com"
+from        = "kkok@example.com"
+to          = ["alert@example.com"]
+
+# exec transport plugin sends alerts via external command.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/exec
+[[route.notify]]
+type        = "exec"
+label       = "send alerts via curl"
+command     = ["curl", "--data-binary", "@-", "-f", "-s",
+               "-H", "Content-Type: application/json",
+               "http://some.service.com/"]
+all         = true
+
+# slack transport plugin sends alerts to Slack as attachments.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/slack
+[[route.notify]]
+type        = "slack"
+url         = "https://hooks.slack.com/services/xxxx/yyyy/zzzz"
+color       = "alert.Info.severity"
+
+# twilio transport plugin sends alerts via SMS using twilio.
+#
+# Ref:
+# https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/twilio
+[[route.notify]]
+type        = "twilio"
+account     = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+token       = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+from        = "+148400000000"
+to          = ["+818000000000", "+817000000000"]
+count_only  = true

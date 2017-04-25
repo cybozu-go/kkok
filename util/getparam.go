@@ -77,6 +77,8 @@ func GetInt(k string, m map[string]interface{}) (v int, err error) {
 	switch i := i.(type) {
 	case int:
 		v = i
+	case int64:
+		v = int(i)
 	case float64:
 		switch {
 		case math.IsNaN(i), math.IsInf(i, 0):
@@ -104,6 +106,8 @@ func GetFloat64(k string, m map[string]interface{}) (v float64, err error) {
 
 	switch i := i.(type) {
 	case int:
+		v = float64(i)
+	case int64:
 		v = float64(i)
 	case float64:
 		v = i
