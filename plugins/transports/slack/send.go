@@ -3,7 +3,6 @@ package slack
 import (
 	"bytes"
 	"context"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -55,7 +54,7 @@ func (m *slackMessage) wait(ctx context.Context, duration time.Duration) bool {
 	}
 }
 
-func (m *slackMessage) do(ctx context.Context) (*http.Response, error) {
+func (m *slackMessage) do(ctx context.Context) (*http.Response, []byte, error) {
 	header := make(http.Header)
 	header.Set("Content-Type", "application/json")
 	req := &http.Request{
@@ -73,14 +72,24 @@ func (m *slackMessage) do(ctx context.Context) (*http.Response, error) {
 	// use context.Background to send alerts gracefully.
 	ctx, cancel := context.WithTimeout(context.Background(), slackAPITimeout)
 	defer cancel()
-	return httpClient.Do(req.WithContext(ctx))
+
+	resp, err := httpClient.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, nil, err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, nil, err
+	}
+	return resp, data, nil
 }
 
 func (m *slackMessage) send(ctx context.Context) bool {
 	var retries int
 
 RETRY:
-	resp, err := m.do(ctx)
+	resp, body, err := m.do(ctx)
 	if err != nil {
 		log.Error("[slack] do", map[string]interface{}{
 			log.FnError: err.Error(),
@@ -95,10 +104,6 @@ RETRY:
 		log.Error("[slack] gave up", nil)
 		return false
 	}
-	defer func(resp *http.Response) {
-		io.Copy(ioutil.Discard, resp.Body)
-		resp.Body.Close()
-	}(resp)
 
 	sleepDuration := slackAPIDuration
 
@@ -131,9 +136,8 @@ RETRY:
 			log.FnURL:            m.url,
 			log.FnHTTPStatusCode: resp.StatusCode,
 		}
-		data, _ := ioutil.ReadAll(resp.Body)
-		if len(data) > 0 {
-			fields[log.FnError] = string(data)
+		if len(body) > 0 {
+			fields[log.FnError] = string(body)
 		}
 		log.Error("[slack] request failed", fields)
 		return false
