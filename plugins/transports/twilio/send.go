@@ -3,7 +3,6 @@ package twilio
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -57,7 +56,7 @@ func (m *twilioSMS) wait(ctx context.Context, duration time.Duration) bool {
 	}
 }
 
-func (m *twilioSMS) do(ctx context.Context) (*http.Response, error) {
+func (m *twilioSMS) do(ctx context.Context) (*http.Response, []byte, error) {
 	header := make(http.Header)
 	header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req := &http.Request{
@@ -76,14 +75,24 @@ func (m *twilioSMS) do(ctx context.Context) (*http.Response, error) {
 	// use context.Background to send SMS gracefully.
 	ctx, cancel := context.WithTimeout(context.Background(), twilioTimeout)
 	defer cancel()
-	return httpClient.Do(req.WithContext(ctx))
+
+	resp, err := httpClient.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, nil, err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, nil, err
+	}
+	return resp, data, nil
 }
 
 func (m *twilioSMS) send(ctx context.Context) bool {
 	var retries int
 
 RETRY:
-	resp, err := m.do(ctx)
+	resp, body, err := m.do(ctx)
 	if err != nil {
 		log.Error("[twilio] do", map[string]interface{}{
 			log.FnError: err.Error(),
@@ -97,10 +106,6 @@ RETRY:
 		log.Error("[twilio] gave up", nil)
 		return false
 	}
-	defer func(resp *http.Response) {
-		io.Copy(ioutil.Discard, resp.Body)
-		resp.Body.Close()
-	}(resp)
 
 	switch {
 	case (200 <= resp.StatusCode) && (resp.StatusCode < 300):
@@ -118,10 +123,9 @@ RETRY:
 		fields := map[string]interface{}{
 			log.FnHTTPStatusCode: resp.StatusCode,
 		}
-		data, _ := ioutil.ReadAll(resp.Body)
-		if len(data) > 0 {
+		if len(body) > 0 {
 			var e map[string]interface{}
-			err := json.Unmarshal(data, &e)
+			err := json.Unmarshal(body, &e)
 			if err == nil {
 				fields["exception"] = e
 			}
