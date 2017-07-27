@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"context"
@@ -15,14 +15,13 @@ type versionCommand struct{}
 
 func (c versionCommand) SetFlags(f *flag.FlagSet) {}
 
-func (c versionCommand) Execute(ctx context.Context, f *flag.FlagSet) error {
+func (c versionCommand) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	fmt.Println("client version:", clientVersion)
 	data, err := Call(ctx, "GET", "/version", nil)
-	if err != nil {
-		return err
+	if err == nil {
+		fmt.Println("server version:", string(data))
 	}
-	fmt.Println("server version:", string(data))
-	return nil
+	return handleError(err)
 }
 
 // VersionCommand implements "version" subcommand.

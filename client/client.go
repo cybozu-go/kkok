@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"bytes"
@@ -8,13 +8,16 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 
 	"github.com/pkg/errors"
 )
 
 var (
-	client = &http.Client{}
+	client    = &http.Client{}
+	kkokURL   *url.URL
+	authToken string
 
 	// ErrNotFound indicates kkok server returned 404.
 	ErrNotFound = errors.New("not found")
@@ -37,8 +40,8 @@ func Call(ctx context.Context, method, api string, j interface{}) ([]byte, error
 	if method == "PUT" || method == "POST" {
 		header.Set("Content-Type", "application/json")
 	}
-	if len(*flgToken) != 0 {
-		header.Set("Authorization", "Bearer "+*flgToken)
+	if len(authToken) != 0 {
+		header.Set("Authorization", "Bearer "+authToken)
 	}
 	var body io.ReadCloser
 	var contentLength int64
@@ -82,4 +85,10 @@ func Call(ctx context.Context, method, api string, j interface{}) ([]byte, error
 	}
 
 	return data, nil
+}
+
+// Setup configures REST API client.
+func Setup(u *url.URL, token string) {
+	kkokURL = u
+	authToken = token
 }
