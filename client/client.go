@@ -81,7 +81,7 @@ func Call(ctx context.Context, method, api string, j interface{}) ([]byte, error
 
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("call %s: status %d: error %s",
-			api, resp.StatusCode, string(data))
+			api, resp.StatusCode, string(bytes.TrimSpace(data)))
 	}
 
 	return data, nil

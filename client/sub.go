@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/google/subcommands"
 )
@@ -51,6 +52,7 @@ func handleError(err error) subcommands.ExitStatus {
 // NewCommander creates a subcommands.Commander for nested sub commands.
 // This registers "flags" and "help" sub commands for the new commander.
 func NewCommander(f *flag.FlagSet, name string) *subcommands.Commander {
+	name = fmt.Sprintf("%s %s", path.Base(os.Args[0]), name)
 	c := subcommands.NewCommander(f, name)
 	c.Register(c.FlagsCommand(), "misc")
 	c.Register(c.HelpCommand(), "misc")

@@ -32,6 +32,10 @@ func (c *filtersShowCommand) Execute(ctx context.Context, f *flag.FlagSet) subco
 	var params kkok.PluginParams
 	err = json.Unmarshal(data, &params)
 	if err == nil {
+		// set "disabled" explicitly
+		if _, ok := params.Params["disabled"]; !ok {
+			params.Params["disabled"] = false
+		}
 		printParams(params, c.showJSON)
 	}
 	return handleError(err)

@@ -12,7 +12,7 @@ type alertsCommand struct{}
 func (c alertsCommand) SetFlags(f *flag.FlagSet) {}
 
 func (c alertsCommand) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	newc := NewCommander(f, "kkokc alerts")
+	newc := NewCommander(f, "alerts")
 	newc.Register(AlertsListCommand(), "")
 	newc.Register(AlertsPostCommand(), "")
 	newc.Register(AlertsPostJSONCommand(), "")
