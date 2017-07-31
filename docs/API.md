@@ -216,7 +216,7 @@ An example JSON may look like:
     {
         "type": "email",
         "from": "kkok@example.org",
-        "mailto": ["ymmt2005@example.org"]
+        "to": ["ymmt2005@example.org"]
     },
     {
         "type": "slack",

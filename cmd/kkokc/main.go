@@ -29,6 +29,7 @@ func main() {
 	sub.Register(client.VersionCommand(), "")
 	sub.Register(client.AlertsCommand(), "")
 	sub.Register(client.FiltersCommand(), "")
+	sub.Register(client.RoutesCommand(), "")
 	flag.Parse()
 	err := cmd.LogConfig{}.Apply()
 	if err != nil {
