@@ -178,23 +178,42 @@ func testBaseFilterInactivate(t *testing.T) {
 		t.Error(`f.Disabled()`)
 	}
 
+	hasInactive := func() bool {
+		m := make(map[string]interface{})
+		f.AddParams(m)
+		_, ok := m["inactive"]
+		return ok
+	}
+
 	f.Inactivate(time.Now().Add(100 * time.Millisecond))
 	if !f.Disabled() {
 		t.Error(`!f.Disabled()`)
+	}
+	if !hasInactive() {
+		t.Error(`!hasInactive()`)
 	}
 
 	time.Sleep(110 * time.Millisecond)
 	if f.Disabled() {
 		t.Error(`f.Disabled()`)
 	}
+	if !hasInactive() {
+		t.Error(`!hasInactive()`)
+	}
 
 	f.Inactivate(time.Now().Add(100 * time.Millisecond))
 	if !f.Disabled() {
 		t.Error(`!f.Disabled()`)
 	}
+	if !hasInactive() {
+		t.Error(`!hasInactive()`)
+	}
 	f.Enable(true)
 	if f.Disabled() {
 		t.Error(`f.Disabled()`)
+	}
+	if hasInactive() {
+		t.Error(`hasInactive()`)
 	}
 
 	f, _ = newBaseFilter("id", map[string]interface{}{

@@ -241,6 +241,9 @@ func (b *BaseFilter) AddParams(m map[string]interface{}) {
 	if b.disabled {
 		m["disabled"] = b.disabled
 	}
+	if !b.inactiveUntil.IsZero() {
+		m["inactive"] = b.inactiveUntil
+	}
 	if b.all {
 		m["all"] = b.all
 	}
@@ -299,8 +302,7 @@ func (b *BaseFilter) Enable(e bool) {
 
 	b.disabled = !e
 	if e {
-		var zero time.Time
-		b.inactiveUntil = zero
+		b.inactiveUntil = time.Time{}
 	}
 }
 

@@ -156,6 +156,13 @@ at the given date.
 
 Return a JSON representation of the filter specified by `ID`.
 
+In addition to fields for PUT method, GET may return these read-only fields:
+
+| Name       | Type   | Description                                     |
+| ---------- | ------ | ----------------------------------------------- |
+| `inactive` | string | RFC3339 date string. See /filters/ID/inactivate |
+
+
 ### DELETE /filters/ID
 
 Delete a filter specified by `ID`.
