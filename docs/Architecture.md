@@ -19,16 +19,16 @@ Alert
 
 An alert is represented as an object with these fields:
 
-| Name | Optional | Type | Description |
+| Name | Required | Type | Description |
 | ---- | -------- | ---- | ----------- |
-| `From` | No | string | Who sent this alert. |
-| `Date` | No | string | RFC3339 format date string. |
-| `Host` | No | string | Where this alert was generated. |
-| `Title` | No | string | One-line description of the alert. |
-| `Message` | Yes | string | Optional multi-line description of the alert. |
-| `Routes` | No | array of strings | List of routes for alert receivers. |
-| `Info` | No | object | Additional fields. |
-| `Sub` | Yes | array of objects | A list of sub-alerts for grouped alert. |
+| `From` | Yes | string | Who sent this alert. |
+| `Date` | Yes | string | RFC3339 format date string. |
+| `Host` | Yes | string | Where this alert was generated. |
+| `Title` | Yes | string | One-line description of the alert. |
+| `Message` | No | string | Optional multi-line description of the alert. |
+| `Routes` | Yes | array of strings | List of routes for alert receivers. |
+| `Info` | Yes | object | Additional fields. |
+| `Sub` | No | array of objects | A list of sub-alerts for grouped alert. |
 
 Additionally, an alert has `Stats` that is a `map[string]float64`
 to bring dynamically calculated values between filters.  `Stats`
