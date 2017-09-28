@@ -136,9 +136,9 @@ type        = "route"
 id          = "emergency_filter"
 label       = "route alerts from alive monitor to emergency"
 if          = "alert.From == 'alive monitor'"
-routes      = ["slack", "mail"]
+routes      = ["notify", "push"]
 auto_mute   = true
-mute_routes = ["mail"]
+mute_routes = ["notify"]
 
 
 #-------------------------------------------------------------------------
@@ -167,7 +167,7 @@ to          = ["alert@example.com"]
 #
 # Ref:
 # https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/exec
-[[route.notify]]
+[[route.push]]
 type        = "exec"
 label       = "send alerts via curl"
 command     = ["curl", "--data-binary", "@-", "-f", "-s",
@@ -179,7 +179,7 @@ all         = true
 #
 # Ref:
 # https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/slack
-[[route.notify]]
+[[route.push]]
 type        = "slack"
 url         = "https://hooks.slack.com/services/xxxx/yyyy/zzzz"
 color       = "alert.Info.severity"
@@ -188,7 +188,7 @@ color       = "alert.Info.severity"
 #
 # Ref:
 # https://godoc.org/github.com/cybozu-go/kkok/plugins/transports/twilio
-[[route.notify]]
+[[route.push]]
 type        = "twilio"
 account     = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 token       = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
