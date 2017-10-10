@@ -223,13 +223,18 @@ func (k *Kkok) sendAlerts(alerts []*Alert) {
 	}
 
 	k.lkr.Lock()
-	defer k.lkr.Unlock()
+	defer func() {
+		k.lkr.Unlock()
+		for id := range routedAlerts {
+			log.Warn("[kkok] non-existing route", map[string]interface{}{
+				"route": id,
+			})
+		}
+	}()
 
 	for id, r := range k.routes {
 		alerts = routedAlerts[id]
-		if len(alerts) == 0 {
-			continue
-		}
+		delete(routedAlerts, id)
 
 		log.Info("[kkok] sending alerts", map[string]interface{}{
 			"route":   id,
@@ -237,7 +242,7 @@ func (k *Kkok) sendAlerts(alerts []*Alert) {
 		})
 
 		for _, t := range r {
-			// t.Deliver must not take a long time.
+			// t.Deliver will not take too long.
 			err := t.Deliver(alerts)
 			if err != nil {
 				log.Error("[kkok] failed to send alerts", map[string]interface{}{
