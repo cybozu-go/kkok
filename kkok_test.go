@@ -41,6 +41,30 @@ func (f *discardFilter) Process(alerts []*Alert) ([]*Alert, error) {
 	return nil, nil
 }
 
+type routeFilter struct {
+	BaseFilter
+
+	routes []string
+}
+
+func (f *routeFilter) Params() PluginParams {
+	p := PluginParams{
+		Type: "route",
+		Params: map[string]interface{}{
+			"routes": f.routes,
+		},
+	}
+	f.BaseFilter.AddParams(p.Params)
+	return p
+}
+
+func (f *routeFilter) Process(alerts []*Alert) ([]*Alert, error) {
+	for _, a := range alerts {
+		a.Routes = f.routes
+	}
+	return alerts, nil
+}
+
 type testTransport struct {
 	alerts []*Alert
 }
@@ -156,7 +180,7 @@ func testRoutes(t *testing.T) {
 	}
 }
 
-func testHandle(t *testing.T) {
+func testHandleMultiFilters(t *testing.T) {
 	t.Parallel()
 
 	k := NewKkok()
@@ -175,20 +199,53 @@ func testHandle(t *testing.T) {
 	tr1 := &testTransport{}
 	k.AddRoute("r1", []Transport{tr1})
 
-	k.Handle([]*Alert{{}})
+	a1 := &Alert{Routes: []string{"r1"}}
+	k.Handle([]*Alert{a1})
 	if len(tr1.alerts) != 0 {
 		t.Error(len(tr1.alerts) != 0)
 	}
 
+	a2 := &Alert{Routes: []string{"r1"}}
 	f2.Enable(false)
-	k.Handle([]*Alert{{}})
+	k.Handle([]*Alert{a2})
 	if len(tr1.alerts) != 2 {
 		t.Error(len(tr1.alerts) != 2)
+	}
+}
+
+func testHandleMultiRoutes(t *testing.T) {
+	t.Parallel()
+
+	k := NewKkok()
+
+	// constructs a route filter which sets 'r1' to `routes` attribute of all alerts
+	f := &routeFilter{}
+	f.Init("f", nil)
+	f.routes = []string{"r1"}
+	err := k.AddStaticFilter(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tr1 := &testTransport{}
+	k.AddRoute("r1", []Transport{tr1})
+
+	tr2 := &testTransport{}
+	k.AddRoute("r2", []Transport{tr2})
+
+	a1 := &Alert{Routes: []string{}}
+	k.Handle([]*Alert{a1})
+	if len(tr1.alerts) != 1 {
+		t.Error("len(tr1.alerts) != 1")
+	}
+	if len(tr2.alerts) != 0 {
+		t.Error("len(tr2.alerts) != 0")
 	}
 }
 
 func TestKkok(t *testing.T) {
 	t.Run("Filters", testFilters)
 	t.Run("Routes", testRoutes)
-	t.Run("Handle", testHandle)
+	t.Run("HandleMultiFilters", testHandleMultiFilters)
+	t.Run("HandleMultiRoutes", testHandleMultiRoutes)
 }

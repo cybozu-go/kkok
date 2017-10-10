@@ -215,16 +215,29 @@ func (k *Kkok) getFilter(id string) Filter {
 }
 
 func (k *Kkok) sendAlerts(alerts []*Alert) {
+	routedAlerts := make(map[string][]*Alert)
+	for _, a := range alerts {
+		for _, id := range a.Routes {
+			routedAlerts[id] = append(routedAlerts[id], a)
+		}
+	}
+
 	k.lkr.Lock()
 	defer k.lkr.Unlock()
 
 	for id, r := range k.routes {
+		alerts = routedAlerts[id]
+		if len(alerts) == 0 {
+			continue
+		}
+
 		log.Info("[kkok] sending alerts", map[string]interface{}{
 			"route":   id,
 			"nalerts": len(alerts),
 		})
 
 		for _, t := range r {
+			// t.Deliver must not take a long time.
 			err := t.Deliver(alerts)
 			if err != nil {
 				log.Error("[kkok] failed to send alerts", map[string]interface{}{
