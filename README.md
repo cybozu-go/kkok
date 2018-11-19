@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/kkok.svg?maxAge=60)][releases]
 [![GoDoc](https://godoc.org/github.com/cybozu-go/kkok?status.svg)][godoc]
-[![Build Status](https://travis-ci.org/cybozu-go/kkok.svg?branch=master)](https://travis-ci.org/cybozu-go/kkok)
+[![CircleCI](https://circleci.com/gh/cybozu-go/kkok.svg?style=svg)](https://circleci.com/gh/cybozu-go/kkok)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/kkok)](https://goreportcard.com/report/github.com/cybozu-go/kkok)
 
 **kkok** (taken from Japanese word 警告 - *keikoku* -, in English *alert*) is a service to process alerts nicely.  It gathers alerts from miscellaneous sources, applies filters to edit or route them, then sends the processed alerts via email, SMS (Twilio), Slack, etc.
