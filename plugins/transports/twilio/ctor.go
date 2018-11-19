@@ -4,9 +4,9 @@ import (
 	"regexp"
 	"text/template"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/kkok"
 	"github.com/cybozu-go/kkok/util"
+	"github.com/cybozu-go/well"
 	"github.com/pkg/errors"
 )
 
@@ -114,5 +114,5 @@ func ctor(params map[string]interface{}) (kkok.Transport, error) {
 
 func init() {
 	kkok.RegisterTransport(transportType, ctor)
-	cmd.Go(dequeueAndSend)
+	well.Go(dequeueAndSend)
 }

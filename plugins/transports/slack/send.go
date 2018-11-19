@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 
 var (
 	sendCh     = make(chan *slackMessage, queueSize)
-	httpClient = &cmd.HTTPClient{
+	httpClient = &well.HTTPClient{
 		Client:   &http.Client{},
 		Severity: log.LvDebug,
 	}

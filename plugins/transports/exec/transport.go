@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/kkok"
+	"github.com/cybozu-go/well"
 	"github.com/pkg/errors"
 )
 
@@ -71,7 +71,7 @@ func (t *transport) exec(j []byte) error {
 		defer cancel()
 	}
 
-	command := cmd.CommandContext(ctx, t.command, t.args...)
+	command := well.CommandContext(ctx, t.command, t.args...)
 	command.Stdin = bytes.NewReader(j)
 	return command.Run()
 }
