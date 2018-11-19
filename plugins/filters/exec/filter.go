@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/kkok"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 	"github.com/pkg/errors"
 )
 
@@ -53,7 +53,7 @@ func (f *filter) exec(j []byte) ([]byte, error) {
 		defer cancel()
 	}
 
-	command := cmd.CommandContext(ctx, f.command[0], f.command[1:]...)
+	command := well.CommandContext(ctx, f.command[0], f.command[1:]...)
 	// suppress successful log
 	command.Severity = log.LvDebug
 	command.Stdin = bytes.NewReader(j)

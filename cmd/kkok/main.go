@@ -7,12 +7,12 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/kkok"
 	_ "github.com/cybozu-go/kkok/plugins/filters/all"
 	_ "github.com/cybozu-go/kkok/plugins/sources/all"
 	_ "github.com/cybozu-go/kkok/plugins/transports/all"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -84,7 +84,7 @@ func main() {
 	// start dispatcher
 	d := kkok.NewDispatcher(cfg.InitialDuration(), cfg.MaxDuration(), k)
 	if !*flgTest {
-		cmd.Go(d.Run)
+		well.Go(d.Run)
 	}
 
 	for _, p := range cfg.Sources {
@@ -95,7 +95,7 @@ func main() {
 		if *flgTest {
 			continue
 		}
-		cmd.Go(func(ctx context.Context) error {
+		well.Go(func(ctx context.Context) error {
 			return src.Run(ctx, d.Post)
 		})
 	}
@@ -116,8 +116,8 @@ func main() {
 	}
 
 	// all done.  wait for completion.
-	err = cmd.Wait()
-	if err != nil && !cmd.IsSignaled(err) {
+	err = well.Wait()
+	if err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }

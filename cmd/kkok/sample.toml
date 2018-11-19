@@ -23,7 +23,7 @@ max_interval     = 30
 # log section specifies logging configurations.
 #
 # Ref:
-# https://godoc.org/github.com/cybozu-go/cmd#LogConfig
+# https://godoc.org/github.com/cybozu-go/well#LogConfig
 [log]
 #filename = "/var/log/kkok.log"
 level = "info"

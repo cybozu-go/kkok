@@ -3,7 +3,7 @@ package kkok
 import (
 	"time"
 
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -40,8 +40,8 @@ type Config struct {
 	// Default is empty.
 	APIToken string `toml:"api_token"`
 
-	// Log from cybozu-go/cmd.
-	Log cmd.LogConfig `toml:"log"`
+	// Log from cybozu-go/well.
+	Log well.LogConfig `toml:"log"`
 
 	// Sources is a list of parameters to construct alert generators.
 	Sources []PluginParams `toml:"source"`

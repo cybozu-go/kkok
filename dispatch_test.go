@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/well"
 )
 
 func TestAlertPool(t *testing.T) {
@@ -60,7 +60,7 @@ func TestDispatcher(t *testing.T) {
 
 	d := NewDispatcher(3*time.Millisecond, 10*time.Millisecond, testHandler{})
 
-	env := cmd.NewEnvironment(context.Background())
+	env := well.NewEnvironment(context.Background())
 	env.Go(d.Run)
 
 	d.put(&Alert{})

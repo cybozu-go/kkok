@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -46,7 +46,7 @@ func sendJSON(w http.ResponseWriter, r *http.Request, data interface{}) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		et := err.Error()
-		fields := cmd.FieldsFromContext(r.Context())
+		fields := well.FieldsFromContext(r.Context())
 		fields[log.FnError] = et
 		log.Error("json.Marshal", fields)
 		http.Error(w, et, http.StatusInternalServerError)
@@ -67,7 +67,7 @@ func recvJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 	err = json.Unmarshal(data, v)
 	if err != nil {
 		et := err.Error()
-		fields := cmd.FieldsFromContext(r.Context())
+		fields := well.FieldsFromContext(r.Context())
 		fields[log.FnError] = et
 		log.Error("json.Unmarshal", fields)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -210,7 +210,7 @@ func (a *apiHandler) postAlert(w http.ResponseWriter, r *http.Request) {
 
 	a.d.put(alert)
 
-	fields := cmd.FieldsFromContext(r.Context())
+	fields := well.FieldsFromContext(r.Context())
 	fields["from"] = alert.From
 	fields["title"] = alert.Title
 	log.Info("new alert", fields)
@@ -270,7 +270,7 @@ func (a *apiHandler) putFilter(w http.ResponseWriter, r *http.Request, id string
 	f, err := NewFilter(params.Type, params.Params)
 	if err != nil {
 		et := err.Error()
-		fields := cmd.FieldsFromContext(r.Context())
+		fields := well.FieldsFromContext(r.Context())
 		fields["filter_id"] = id
 		fields[log.FnError] = et
 		log.Error("failed to create a new filter", fields)
@@ -375,7 +375,7 @@ func (a *apiHandler) putRoute(w http.ResponseWriter, r *http.Request, id string)
 		tr, err := NewTransport(pp.Type, pp.Params)
 		if err != nil {
 			et := err.Error()
-			fields := cmd.FieldsFromContext(r.Context())
+			fields := well.FieldsFromContext(r.Context())
 			fields["route_id"] = id
 			fields[log.FnError] = et
 			log.Error("failed to create a new transport", fields)
@@ -388,9 +388,9 @@ func (a *apiHandler) putRoute(w http.ResponseWriter, r *http.Request, id string)
 	a.k.AddRoute(id, route)
 }
 
-// NewHTTPServer returns *cmd.HTTPServer for REST API.
-func NewHTTPServer(addr, apiToken string, k *Kkok, d *Dispatcher) (*cmd.HTTPServer, error) {
-	s := &cmd.HTTPServer{
+// NewHTTPServer returns *well.HTTPServer for REST API.
+func NewHTTPServer(addr, apiToken string, k *Kkok, d *Dispatcher) (*well.HTTPServer, error) {
+	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    addr,
 			Handler: &apiHandler{apiToken, k, d},

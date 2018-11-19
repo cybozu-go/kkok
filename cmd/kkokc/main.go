@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/kkok/client"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 	sub "github.com/google/subcommands"
 )
 
@@ -31,7 +31,7 @@ func main() {
 	sub.Register(client.FiltersCommand(), "")
 	sub.Register(client.RoutesCommand(), "")
 	flag.Parse()
-	err := cmd.LogConfig{}.Apply()
+	err := well.LogConfig{}.Apply()
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -42,11 +42,11 @@ func main() {
 	client.Setup(u, *flgToken)
 
 	exitStatus := sub.ExitSuccess
-	cmd.Go(func(ctx context.Context) error {
+	well.Go(func(ctx context.Context) error {
 		exitStatus = sub.Execute(ctx)
 		return nil
 	})
-	cmd.Stop()
-	cmd.Wait()
+	well.Stop()
+	well.Wait()
 	os.Exit(int(exitStatus))
 }
